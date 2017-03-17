@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cd "`dirname $0`"
+. lib/rootbox/utils.sh
+
+mkdir -p lib/rootbox/cmdarg
+cd lib/rootbox/cmdarg
+download https://raw.githubusercontent.com/akesterson/cmdarg/master/cmdarg.sh
+download https://raw.githubusercontent.com/akesterson/cmdarg/master/LICENSE.txt

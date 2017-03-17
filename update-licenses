@@ -1,0 +1,14 @@
+#!/bin/bash
+cat > LICENSE-THIRD-PARTY <<EOF
+==============================================
+             THIRD PARTY LICENSES
+==============================================
+
+**********************************************
+              lib/rootbox/cmdarg
+**********************************************
+
+`cat lib/rootbox/cmdarg/LICENSE.txt`
+EOF
+
+cp LICENSE* lib/rootbox

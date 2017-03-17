@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -e
+[ -n "$ROOTBOX_DEBUG" ] && set -x
+
+for script in `dirname $0`/../lib/rootbox/*.sh; do
+  . $script
+done
+
+main "$@"
