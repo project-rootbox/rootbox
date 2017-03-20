@@ -59,8 +59,7 @@ generic_command_setup() {
   cmdarg_parse "$@"
 
   [ "${cmdarg_cfg['debug']}" == "true" ] && set -x || true
-
-  [ "${cmdarg_cfg['license']}" == "true" ] && show_licenses
+  [ "${cmdarg_cfg['license']}" == "true" ] && show_licenses || true
 }
 
 
