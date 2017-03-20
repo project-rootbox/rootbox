@@ -7,8 +7,6 @@ DEFAULT_VER="3.5"
 
 DEFAULT_MIRROR="http://nl.alpinelinux.org/alpine/"
 
-IMAGE_SIZE="10"
-
 
 image_path() {
   echo "$IMAGES/alpine-$1.img"
@@ -18,7 +16,8 @@ image_path() {
 create_tmp_image() {
   echo "Creating bare image..."
 
-  dd if=/dev/zero of="$tpath" bs=1M count="$IMAGE_SIZE"
+
+  truncate -s 128G "$tpath"
   mkfs.ext4 -F "$tpath"
   imgmount "$tpath" "$mpath"
 }
