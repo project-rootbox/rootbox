@@ -6,8 +6,25 @@
 
 set -Te
 
-for script in `dirname $0`/../lib/rootbox/*.sh; do
-  . $script
+SCRIPTS=`cat <<EOF
+utils.sh
+args.sh
+init.sh
+image.sh
+main.sh
+EOF
+`
+
+for script in $SCRIPTS; do
+  path="`dirname $0`/../lib/rootbox/$script"
+
+  if [ ! -f "$path" ]; then
+    echo "FATAL ERROR: rootbox wasn't installed correctly!" >&2
+    echo "Missing script: $script (expected to be found at $path)" >&2
+    exit 1
+  fi
+
+  . "$path"
 done
 
 main "$@"

@@ -7,6 +7,8 @@ DEFAULT_VER="3.5"
 
 DEFAULT_MIRROR="http://nl.alpinelinux.org/alpine/"
 
+MKFS_OPTS="-t ext4 -F -Osparse_super,^has_journal -Enum_backup_sb=0"
+
 
 image_path() {
   echo "$IMAGES/alpine-$1.img"
@@ -18,7 +20,7 @@ create_tmp_image() {
 
 
   truncate -s 128G "$tpath"
-  mkfs.ext4 -F "$tpath"
+  mke2fs $MKFS_OPTS "$tpath"
   imgmount "$tpath" "$mpath"
 }
 
