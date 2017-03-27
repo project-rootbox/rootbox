@@ -2,10 +2,59 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+_add_color() {
+  eval "$1=\\\\033[$2m"
+}
+
+_add_color C_R 0  # Reset
+_add_color C_B 1  # Bold
+_add_color CF_RED 31
+_add_color CF_GREEN 32
+_add_color CF_BLUE 34
+_add_color CF_CYAN 36
+_add_color CF_R 39
+
+C_NOTE="$C_B$CF_CYAN"
+C_ERROR="$C_B$CF_RED"
+
+
+c_reset() {
+  echo -ne "$C_R"
+}
+
+
+print() {
+  echo -ne "$@"
+}
+
+
+println() {
+  echo -e "$@$C_R"
+}
+
+
+printfln() {
+  fm="$1"
+  shift
+  printf "$fm$C_R\n" "$@"
+}
+
+
+pnote() {
+  println "$C_NOTE$@"
+}
+
+
+perror() {
+  println "$C_ERROR$@"
+}
+
+
 ndie() {
   ret=$1
   shift
-  [ "$#" -ne 0 ] && echo "$@" >&2
+  [ "$#" -ne 0 ] && perror "$@" >&2
   exit $ret
 }
 
@@ -18,6 +67,17 @@ quit() {
 die() {
   ndie 1 "$@"
 }
+
+
+pdebug() {
+  printfln "$C_B$CF_CYAN% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
+}
+
+
+enable_debug() {
+  trap 'pdebug "CMD $BASH_COMMAND"' DEBUG
+}
+
 
 safecall() {
   if [ -z "$2" ]; then

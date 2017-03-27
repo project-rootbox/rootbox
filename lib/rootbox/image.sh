@@ -14,7 +14,7 @@ image_path() {
 
 
 create_tmp_image() {
-  echo "Creating bare image..."
+  pnote "Creating bare image..."
 
 
   truncate -s 128G "$tpath"
@@ -25,7 +25,7 @@ create_tmp_image() {
 
 image_setup() {
   local version="v$version"
-  echo "Download apk tools..."
+  pnote "Downloading apk tools..."
 
   download "$mirror/$version/main/x86_64/APKINDEX.tar.gz"
   tar xvf APKINDEX.tar.gz
@@ -35,7 +35,7 @@ image_setup() {
   download "$mirror/$version/main/x86_64/$file" "$file"
   tar xzf "$file"
 
-  echo "Installing chroot into image..."
+  pnote "Installing chroot into image..."
   sbin/apk.static -X "$mirror/$version/main" -U --allow-untrusted \
                   --root "$mpath" --initdb add alpine-base
 

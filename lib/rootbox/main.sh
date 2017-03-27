@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 main() {
-  [ -n "$ROOTBOX_DEBUG" ] && set -x
+  [ -n "$ROOTBOX_DEBUG" ] && enable_debug
 
   if [[ -n "$1" && "$1" != -* ]]; then
     run_command "$@"

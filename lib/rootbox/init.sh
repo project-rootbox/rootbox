@@ -33,7 +33,7 @@ remove_old_directory() {
 init() {
   [ -e "$WORKSPACE" ] && remove_old_directory
 
-  echo "Setting up workspace..."
+  pnote "Setting up workspace..."
 
   if [ -n "$dir" ]; then
     mkdir -p "$dir"
