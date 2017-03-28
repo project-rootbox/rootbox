@@ -43,6 +43,10 @@ image_setup() {
 
 
 image_setup_del() {
+  local tpath="$1"
+  local mpath="$2"
+
+  [ -f "$tpath" ] && rm "$tpath"
   umount "$mpath"
   rmdir "$mpath"
 }
@@ -69,7 +73,7 @@ image.add() {
   export version mirror path
 
   create_tmp_image
-  safecall "in_tmp image_setup" image_setup_del
+  safecall "in_tmp image_setup" "image_setup_del '$tpath' '$mpath'"
 }
 
 

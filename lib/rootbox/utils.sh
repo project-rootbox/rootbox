@@ -47,6 +47,16 @@ printfln() {
 }
 
 
+pnote() {
+  println "$C_NOTE$@"
+}
+
+
+perror() {
+  println "$C_ERROR$@"
+}
+
+
 ndie() {
   ret=$1
   shift
@@ -76,8 +86,8 @@ pdebug() {
 }
 
 
-internal_cmd_fail() {
-  printfln "INTERNAL ERROR: $C_ERROR% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
+cmd_fail() {
+  printfln "ERROR: $C_ERROR% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
   exit 1
 }
 
@@ -88,7 +98,7 @@ enable_debug() {
 
 
 enable_errors() {
-  trap 'internal_cmd_fail "$BASH_COMMAND exited with 1"' ERR
+  trap 'cmd_fail "$BASH_COMMAND exited with 1"' ERR
 }
 
 
@@ -100,6 +110,35 @@ disable_errors() {
 # SAFECALLS (a hacked-on bash variant of try ... finally)
 
 
+update_trapchain() {
+  local sig="$1"
+
+  chain=TRAPCHAIN_$sig
+  chainlen=\${#$chain}
+  chainvar=$chain[@]
+  [ `eval "echo $chainlen"` -eq 0 ] || trap "`join ' && ' "${!chainvar}"`" $sig
+}
+
+
+trapchain() {
+  local func="$1"
+  local sig="$2"
+
+  chain=TRAPCHAIN_$sig
+  eval "$chain+=('$func')"
+  update_trapchain $sig
+}
+
+
+trapchain_pop() {
+  local sig="$1"
+
+  chain=TRAPCHAIN_$sig
+  unset $chain[-1]
+  update_trapchain $sig
+}
+
+
 safecall() {
   if [ -z "$2" ]; then
     safe="$1_safecall"
@@ -109,19 +148,23 @@ safecall() {
     del="$2"
   fi
 
-  (eval "$safe") && ret=0 || ret=$?
-  (eval "$del") || true
-  exit "$ret"
+  trapchain "$del" EXIT
+  eval "$safe"
+  trapchain_pop
 }
 
 
 in_tmp_safecall() {
+  local block="$1"
+  local dir="$2"
+
   cd "$dir"
   eval "$block"
 }
 
 
 in_tmp_del() {
+  local dir="$1"
   rm -rf "$dir"
 }
 
@@ -131,7 +174,7 @@ in_tmp() {
   local dir=`mktemp -d "$TMP/XXXXXXXXXX"`
   export block dir
 
-  safecall in_tmp
+  safecall "in_tmp_safecall '$block' '$dir'" "in_tmp_del '$dir'"
 }
 
 
@@ -217,13 +260,21 @@ split() {
 }
 
 
+join() {
+  local sep="$1"
+  shift
+  local ret="${*/#/$sep}"
+  echo ${ret#$sep}
+}
+
+
 download() {
   url="$1"
   target="$2"
 
   [ -z "$target" ] && target=-O || target="-o$target"
 
-  curl "$target" -L "$url"
+  curl "$target" -fL "$url"
 }
 
 
