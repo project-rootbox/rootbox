@@ -84,7 +84,7 @@ run_command() {
   local cmd="$1"
   shift
 
-  [[ " ${commands[@]} " =~ " $cmd " ]] || \
+  [[ " ${COMMANDS[@]} " =~ " $cmd " ]] || \
     die "Invalid command '$cmd'; use --help for help"
   ROOTBOX_HEADER+=$(cat <<EOF
 

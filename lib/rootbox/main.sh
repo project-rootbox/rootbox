@@ -22,6 +22,7 @@ integrity_check() {
   check_exe bsdtar "bsdtar is required to be able to distribute boxes"
   check_exe chmod
   check_exe chown
+  check_exe awk
 
   (( ${BASH_VERSINFO[0]} >= 4 )) || die "bash >= 4 is requried"
 }
@@ -29,6 +30,7 @@ integrity_check() {
 
 main() {
   [ "$ROOTBOX_DEBUG" == "1" ] && enable_debug
+  enable_errors
 
   integrity_check
 

@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+# COLORS, PRINTING, ERRORS, DEBUGGING
+
 _add_color() {
   eval "$1=\\\\033[$2m"
 }
@@ -41,42 +43,52 @@ printfln() {
 }
 
 
-pnote() {
-  println "$C_NOTE$@"
-}
-
-
-perror() {
-  println "$C_ERROR$@"
-}
-
-
 ndie() {
   ret=$1
   shift
-  [ "$#" -ne 0 ] && perror "$@" >&2
+  [ "$#" -ne 0 ] && println "$@" >&2
+  trap - ERR
   exit $ret
 }
 
 
 quit() {
-  ndie 0 "$@"
+  ndie 0 "$C_NOTE$@"
 }
 
 
 die() {
-  ndie 1 "$@"
+  ndie 1 "$C_ERROR$@"
+}
+
+
+internal() {
+  die "INTERNAL ERROR: $@"
 }
 
 
 pdebug() {
-  printfln "$C_B$CF_CYAN% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
+  printfln "$C_NOTE% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
+}
+
+
+internal_cmd_fail() {
+  printfln "INTERNAL ERROR: $C_ERROR% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
+  exit 1
 }
 
 
 enable_debug() {
-  trap 'pdebug "CMD $BASH_COMMAND"' DEBUG
+  trap 'pdebug "$BASH_COMMAND"' DEBUG
 }
+
+
+enable_errors() {
+  trap 'internal_cmd_fail "$BASH_COMMAND exited with 1"' ERR
+}
+
+
+# SAFECALLS (a hacked-on bash variant of try ... finally)
 
 
 safecall() {
@@ -111,6 +123,88 @@ in_tmp() {
   export block dir
 
   safecall in_tmp
+}
+
+
+# LOCATION LINKS
+
+# e.g.
+# git:user/repo        -> https://github.com/user/repo
+# a/b                  -> file://$PWD/a/b
+# /a/b                 -> file://a/b
+
+
+with_location_pure_git() {
+  git init
+  git config core.sparseCheckout true
+  echo "$path" > .git/info/sparse-checkout
+  git pull "$repo" "$branch" --depth=1 || die "Invalid Git location $loc"
+  [ -f "$path" ] || internal "$path not created via sparse checkout"
+
+  path="`realpath "$PWD/$path"`"
+  export path
+  eval "$block"
+}
+
+
+with_location() {
+  local loc="$1"
+  local block="$2"
+  local default="$3"
+  local kind
+
+  case "$loc" in
+  git:*)
+    if [[ "$loc" == *://* ]]; then
+      kind=github
+      loc="https://github.com/$loc"
+    else
+      kind=git
+    fi ;;
+  github:*) kind=github ;;
+  gitlab:*) kind=gitlab ;;
+  *) kind=file ;;
+  esac
+
+  case "$kind" in
+  git*)
+    local repo
+    local path
+    local branch
+
+    if [[ "$loc" =~ [^:]// ]]; then
+      read -r repo path <<< `split "$loc" "://"`
+    else
+      repo="$loc"
+      path="$default"
+    fi
+
+    if [[ "$repo" == *@@* ]]; then
+      local _
+      read -r _ branch <<< `split "$repo" "@@"`
+    else
+      branch=master
+    fi
+
+    export loc repo path branch block
+    in_tmp with_location_pure_git ;;
+  file)
+    [ -f "$loc" ] || die "Invalid file location $loc"
+    local path="`realpath "$loc"`"
+    export path
+    eval "$block" ;;
+  *) internal "invalid location kind $kind" ;;
+  esac
+}
+
+
+# MISC.
+
+
+split() {
+  local str="$1"
+  local sep="$2"
+  echo "$str" | awk "BEGIN { FS=\"$sep\"; } { print \$1\"\\n\"\$2; }"
 }
 
 
