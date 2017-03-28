@@ -3,8 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+load_factory() {
+  echo "$path"
+}
+
+
 box.new() {
-  echo
+  if [ -n "$factory" ]; then
+    pnote "Using image factory $factory..."
+    with_location "$factory" load_factory "factory.sh"
+  fi
 }
 
 

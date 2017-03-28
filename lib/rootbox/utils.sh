@@ -155,9 +155,6 @@ safecall() {
 
 
 in_tmp_safecall() {
-  local block="$1"
-  local dir="$2"
-
   cd "$dir"
   eval "$block"
 }
@@ -174,47 +171,63 @@ in_tmp() {
   local dir=`mktemp -d "$TMP/XXXXXXXXXX"`
   export block dir
 
-  safecall "in_tmp_safecall '$block' '$dir'" "in_tmp_del '$dir'"
+  safecall in_tmp_safecall "in_tmp_del '$dir'"
 }
 
 
 # LOCATION LINKS
 
-# e.g.
-# git:user/repo        -> https://github.com/user/repo
-# a/b                  -> file://$PWD/a/b
-# /a/b                 -> file://a/b
-
 
 with_location_pure_git() {
+  pnote "Downloading repo $repo with branch $branch..."
+
   git init
   git config core.sparseCheckout true
   echo "$path" > .git/info/sparse-checkout
+
   git pull "$repo" "$branch" --depth=1 || die "Invalid Git location $loc"
   [ -f "$path" ] || internal "$path not created via sparse checkout"
 
   path="`realpath "$PWD/$path"`"
   export path
-  eval "$block"
+  eval "$wl_block"
+}
+
+
+with_location_git_hosted() {
+  mkdir -p "`dirname $path`"
+  case "$kind" in
+  github) url="https://raw.githubusercontent.com/$repo/$branch/$path" ;;
+  gitlab) url="https://gitlab.com/$repo/raw/$branch/`basename $repo`/$path" ;;
+  *) internal "Invalid Git kind $kind" ;;
+  esac
+
+  pnote "Downloading from $url..."
+  download "$url" "$path" || die "Invalid Git location $loc"
+
+  local path="$PWD/$path"
+  export path
+  eval "$wl_block"
 }
 
 
 with_location() {
   local loc="$1"
-  local block="$2"
+  local wl_block="$2"
   local default="$3"
   local kind
 
   case "$loc" in
   git:*)
+    loc="${loc#*:}"
     if [[ "$loc" == *://* ]]; then
-      kind=github
-      loc="https://github.com/$loc"
-    else
       kind=git
+    else
+      kind=github
     fi ;;
-  github:*) kind=github ;;
-  gitlab:*) kind=gitlab ;;
+  github:*) loc="${loc#*:}"; kind=github ;;
+  gitlab:*) loc="${loc#*:}"; kind=gitlab ;;
+  file:*) loc="${loc#*:}"; kind=file ;;
   *) kind=file ;;
   esac
 
@@ -224,27 +237,31 @@ with_location() {
     local path
     local branch
 
-    if [[ "$loc" =~ [^:]// ]]; then
-      read -r repo path <<< `split "$loc" "://"`
+    if [[ "$loc" =~ /// ]]; then
+      read -r repo path <<< `split "$loc" "///"`
     else
       repo="$loc"
       path="$default"
     fi
 
     if [[ "$repo" == *@@* ]]; then
-      local _
-      read -r _ branch <<< `split "$repo" "@@"`
+      read -r repo branch <<< `split "$repo" "@@"`
     else
       branch=master
     fi
 
-    export loc repo path branch block
-    in_tmp with_location_pure_git ;;
+    export loc repo path branch wl_block
+    case "$kind" in
+    git) in_tmp with_location_pure_git ;;
+    *)   in_tmp with_location_git_hosted ;;
+    esac ;;
   file)
-    [ -f "$loc" ] || die "Invalid file location $loc"
+    [ -d "$loc" ] && loc="$loc/$default" || true
+    [ -e "$loc" ] || die "Invalid file location $loc"
+
     local path="`realpath "$loc"`"
     export path
-    eval "$block" ;;
+    eval "$wl_block" ;;
   *) internal "invalid location kind $kind" ;;
   esac
 }
@@ -275,6 +292,7 @@ download() {
   [ -z "$target" ] && target=-O || target="-o$target"
 
   curl "$target" -fL "$url"
+  echo
 }
 
 
