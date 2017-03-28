@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ALL_VERS="3.4 3.5"
-DEFAULT_VER="3.5"
-
 DEFAULT_MIRROR="http://nl.alpinelinux.org/alpine/"
 
 MKFS_OPTS="-t ext4 -F -Osparse_super,^has_journal -Enum_backup_sb=0"

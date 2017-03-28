@@ -3,6 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+ALL_VERS="3.4 3.5"
+DEFAULT_VER="3.5"
+
+
 # COLORS, PRINTING, ERRORS, DEBUGGING
 
 _add_color() {
@@ -47,7 +51,7 @@ ndie() {
   ret=$1
   shift
   [ "$#" -ne 0 ] && println "$@" >&2
-  trap - ERR
+  disable_errors
   exit $ret
 }
 
@@ -85,6 +89,11 @@ enable_debug() {
 
 enable_errors() {
   trap 'internal_cmd_fail "$BASH_COMMAND exited with 1"' ERR
+}
+
+
+disable_errors() {
+  trap - ERR
 }
 
 

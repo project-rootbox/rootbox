@@ -56,7 +56,9 @@ generic_command_setup() {
   cmdarg_info "author" "Ryan Gonzalez"
   cmdarg "D" "debug" "Print each shell command as it's executed."
   cmdarg "L" "license" "Show the license."
+  disable_errors
   cmdarg_parse "$@"
+  enable_errors
 
   [ "${cmdarg_cfg['debug']}" == "true" ] && enable_debug || true
   [ "${cmdarg_cfg['license']}" == "true" ] && show_licenses || true

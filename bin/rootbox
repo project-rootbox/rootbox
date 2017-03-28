@@ -11,6 +11,7 @@ utils.sh
 args.sh
 init.sh
 image.sh
+box.sh
 main.sh
 EOF
 `
