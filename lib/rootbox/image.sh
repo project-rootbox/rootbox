@@ -85,6 +85,8 @@ image.remove() {
   [ -d "$path.mnt" ] && umount_if_mounted "$path.mnt"
   rm -f "$path.tmp" || true
   rm "$path"
+
+  pnote "Successfully removed image '$version.'"
 }
 
 

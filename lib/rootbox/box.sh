@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+DEFAULT_COMMAND="/bin/ash -i"
 FACTORY="_factory.sh"
 
 
@@ -12,7 +13,7 @@ load_factory() {
 
 
 box_actual_setup() {
-  in_chroot "$mpoint" "/bin/ash -c '[ -f /_$FACTORY ] && /$FACTORY || :'" \
+  in_chroot "$mpoint" "/bin/ash -c '[ -f /$FACTORY ] && . /$FACTORY || :'" \
             "$tbox/binds"
 }
 
@@ -43,7 +44,7 @@ box.new() {
 
   mkdir -p "$tbox"
 
-  echo -e `join "\n" ${bind[@]}` > "$tbox/binds"
+  echo -e `join "\n" "${box_bind_values[@]}"` > "$tbox/binds"
   cp --sparse=always "$image" "$tbox/image"
 
   pnote "Setting up box..."
@@ -72,4 +73,59 @@ mounted whenever the box is run. Can be passed multiple times." "" \
 }
 
 
+box.remove() {
+  require_root
+
+  box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$box' does not exist"
+
+  rm "$box/binds"
+  rm "$box/image"
+  rmdir "$box"
+
+  pnote "Successfully removed image '$box'."
+}
+
+
+box_run_command() {
+  in_chroot "$mpoint" "$command" "$box/binds" "${box_bind_values[@]}"
+}
+
+
+box.run() {
+  require_root
+
+  box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$box' does not exist"
+
+  export box command
+  with_mount "$box/image" box_run_command
+}
+
+
+box.run::DESCR() {
+  echo "runs the command inside the given box."
+}
+
+box.run::ARGS() {
+  cmdarg "n:" "name" "The name of the box to run"
+  cmdarg "c?" "command" "The command to run" "$DEFAULT_COMMAND"
+  cmdarg "b?" "bind" "Bind mount the given directory inside the chroot before \
+the command is run. Can be passed multiple times." "" \
+    box_bind_validate
+}
+
+
+box.remove::DESCR() {
+  echo "deletes the given box."
+}
+
+
+box.remove::ARGS() {
+  cmdarg "n:" "name" "The name of the box to delete"
+}
+
+
 register_command box.new
+register_command box.run
+register_command box.remove

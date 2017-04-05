@@ -103,7 +103,7 @@ EOF
   generic_command_setup "$@"
 
   for key in "${!cmdarg_cfg[@]}"; do
-    eval "local $key=${cmdarg_cfg[$key]}"
+    eval "local $key=\"${cmdarg_cfg[$key]}\""
   done
   eval "export ${!cmdarg_cfg[@]}"
 
