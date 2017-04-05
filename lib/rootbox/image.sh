@@ -95,7 +95,7 @@ image.remove() {
   local path="`image_path v$version`"
   [ -f "$path" ] || die "Version $version is not yet installed"
   [ -d "$path.mnt" ] && umount_if_mounted "$path.mnt"
-  rm -f "$path.tmp" || true
+  rm -f "$path.tmp" || :
   rm "$path"
 
   pnote "Successfully removed image '$version'."

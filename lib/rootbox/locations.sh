@@ -93,7 +93,7 @@ with_location() {
     *)   in_tmp with_location_git_hosted ;;
     esac ;;
   file)
-    [ -d "$loc" ] && loc="$loc/$default" || true
+    [ -d "$loc" ] && loc="$loc/$default" || :
     [ -e "$loc" ] || die "Invalid file location $loc"
 
     local path="`realpath "$loc"`"
