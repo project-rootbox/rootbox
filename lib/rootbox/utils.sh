@@ -116,7 +116,11 @@ update_trapchain() {
   chain=TRAPCHAIN_$sig
   chainlen=\${#$chain}
   chainvar=$chain[@]
-  [ `eval "echo $chainlen"` -eq 0 ] || trap "`join ' && ' "${!chainvar}"`" $sig
+  if [ `eval "echo $chainlen"` -eq 0 ]; then
+    trap - $sig
+  else
+    trap "`join ' && ' "${!chainvar}"`" $sig
+  fi
 }
 
 
@@ -134,8 +138,12 @@ trapchain_pop() {
   local sig="$1"
 
   chain=TRAPCHAIN_$sig
-  unset $chain[-1]
+  last=$chain[-1]
+  local block="${!last}"
+  unset $last
+
   update_trapchain $sig
+  eval "$block"
 }
 
 
@@ -150,7 +158,7 @@ safecall() {
 
   trapchain "$del" EXIT
   eval "$safe"
-  trapchain_pop
+  trapchain_pop EXIT
 }
 
 
@@ -175,6 +183,32 @@ in_tmp() {
 }
 
 
+with_mount_safecall() {
+  imgmount "$img" "$mpoint"
+  eval "$block"
+}
+
+
+with_mount_del() {
+  local mpoint="$1"
+  umount_if_mounted "$mpoint"
+}
+
+
+with_mount() {
+  local img="$1"
+  local block="$2"
+
+  local mpoint="$img.mnt"
+  [ -d "$mpoint" ] && umount_if_mounted "$mpoint"
+  mkdir -p "$mpoint"
+
+  export block img mpoint
+
+  safecall with_mount_safecall "with_mount_del '$mpoint'"
+}
+
+
 # LOCATION LINKS
 
 
@@ -190,6 +224,8 @@ with_location_pure_git() {
 
   path="`realpath "$PWD/$path"`"
   export path
+
+  cd "$origdir"
   eval "$wl_block"
 }
 
@@ -207,6 +243,8 @@ with_location_git_hosted() {
 
   local path="$PWD/$path"
   export path
+
+  cd "$origdir"
   eval "$wl_block"
 }
 
@@ -216,6 +254,8 @@ with_location() {
   local wl_block="$2"
   local default="$3"
   local kind
+
+  local origdir="$PWD"
 
   case "$loc" in
   git:*)
@@ -250,7 +290,7 @@ with_location() {
       branch=master
     fi
 
-    export loc repo path branch wl_block
+    export loc repo path branch wl_block origdir
     case "$kind" in
     git) in_tmp with_location_pure_git ;;
     *)   in_tmp with_location_git_hosted ;;
@@ -296,6 +336,16 @@ download() {
 }
 
 
+image_path() {
+  echo "$IMAGES/alpine-$1.img"
+}
+
+
+box_path() {
+  echo "$BOXES/$1.box"
+}
+
+
 imgmount() {
   image="$1"
   target="$2"
@@ -303,6 +353,94 @@ imgmount() {
 }
 
 
+umount_if_mounted() {
+  mount | grep -q "`realpath "$1"`" && umount -l "$1"
+  rmdir "$1"
+}
+
+
 require_root() {
   [ "$EUID" -eq 0 ] || die ${1:-"This must be run as root!"}
+}
+
+
+with_bind_safecall() {
+  eval "$block"
+}
+
+
+with_bind_del() {
+  local path="$1"
+  umount_if_mounted "$path"
+}
+
+
+with_bind() {
+  local root="$1"
+  local spec="$2"
+  local block="$3"
+
+  local bind target
+  read -r bind target <<< `split "$spec" '///'`
+
+  [ -n "$bind" ] && [ -n "$target" ] || die "Invalid bind mount spec '$spec'"
+
+  local path="$root/$target"
+
+  mkdir -p "$path"
+  sudo mount --bind "$bind" "$path"
+
+  export block
+  safecall with_bind_safecall "with_bind_del '$path'"
+}
+
+
+with_binds_impl() {
+  case "${#rest[@]}" in
+  "0") internal "with_binds given no arguments" ;;
+  "1")
+    local block="${rest[0]}"
+    eval "$block" ;;
+  "2")
+    local spec="${rest[0]}"
+    local block="${rest[1]}"
+    with_bind "$root" "$spec" "$block" ;;
+  "3")
+    local first_spec="${rest[0]}"
+    rest=("${rest[@]:1}")
+    export rest
+
+    with_bind "$root" "$first_spec" with_binds_impl ;;
+  esac
+}
+
+
+with_binds() {
+  # with_binds root specs... block
+
+  local root="$1"
+  shift
+  local rest=("$@")
+
+  export root rest
+  with_binds_impl
+}
+
+
+with_binds_unset_ifs() {
+  unset IFS
+  with_binds "$@"
+}
+
+
+in_chroot() {
+  # in_chroot mpoint command bind-file other-binds...
+  local mpoint="$1"
+  local command="$2"
+  local bind_file="$3"
+  shift 3
+
+  IFS=$'\n'
+  with_binds_unset_ifs "$mpoint" `< "$bind_file"` "$@" \
+                       "chroot '$mpoint' $command"
 }

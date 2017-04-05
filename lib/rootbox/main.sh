@@ -11,6 +11,7 @@ check_exe() {
 
 integrity_check() {
   check_exe curl
+  check_exe cp
   check_exe less
   check_exe truncate
   check_exe mke2fs

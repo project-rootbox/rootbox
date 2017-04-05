@@ -5,5 +5,5 @@ cd "`dirname $0`"
 
 mkdir -p lib/rootbox/cmdarg
 cd lib/rootbox/cmdarg
-download https://raw.githubusercontent.com/akesterson/cmdarg/master/cmdarg.sh
-download https://raw.githubusercontent.com/akesterson/cmdarg/master/LICENSE.txt
+download https://raw.githubusercontent.com/kirbyfan64/cmdarg/fix_ret/cmdarg.sh
+download https://raw.githubusercontent.com/kirbyfan64/cmdarg/fix_ret/LICENSE.txt

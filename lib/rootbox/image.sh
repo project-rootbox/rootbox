@@ -7,18 +7,11 @@ DEFAULT_MIRROR="http://nl.alpinelinux.org/alpine/"
 MKFS_OPTS="-t ext4 -F -Osparse_super,^has_journal -Enum_backup_sb=0"
 
 
-image_path() {
-  echo "$IMAGES/alpine-$1.img"
-}
-
-
 create_tmp_image() {
   pnote "Creating bare image..."
 
-
   truncate -s 128G "$tpath"
   mke2fs $MKFS_OPTS "$tpath"
-  imgmount "$tpath" "$mpath"
 }
 
 
@@ -36,25 +29,9 @@ image_setup() {
 
   pnote "Installing chroot into image..."
   sbin/apk.static -X "$mirror/$version/main" -U --allow-untrusted \
-                  --root "$mpath" --initdb add alpine-base
+                  --root "$mpoint" --initdb add alpine-base
 
   mv "$tpath" "$path"
-}
-
-
-image_setup_del() {
-  local tpath="$1"
-  local mpath="$2"
-
-  [ -f "$tpath" ] && rm "$tpath"
-  umount "$mpath"
-  rmdir "$mpath"
-}
-
-
-umount_if_mounted() {
-  mount | grep -q "`realpath "$1"`" && umount "$1"
-  rmdir "$1"
 }
 
 
@@ -63,17 +40,13 @@ image.add() {
 
   local path="`image_path v$version`"
   local tpath="$path.tmp"
-  local mpath="$path.mnt"
   [ -f "$path" ] && quit "Version $version was already downloaded"
-
   rm -rf "$path" "$tpath"
-  [ -d "$mpath" ] && umount_if_mounted "$mpath"
-  mkdir "$mpath"
 
   export version mirror path
 
   create_tmp_image
-  safecall "in_tmp image_setup" "image_setup_del '$tpath' '$mpath'"
+  with_mount "$tpath" "in_tmp image_setup"
 }
 
 

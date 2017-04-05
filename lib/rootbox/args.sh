@@ -33,8 +33,8 @@ register_command() {
 show_licenses() {
   echo "Rootbox is (c) 2017 Ryan Gonzalez and is licensed under the \
 Mozilla Public License 2.0."
-  echo "Rootbox uses cmdarg, which is (c) 2013 Andrew Kesterson and is licensed \
-under the MIT license."
+  echo "Rootbox embeds cmdarg, which is (c) 2013 Andrew Kesterson and is \
+licensed under the MIT license."
 
   while [ "$answer" != "y" ] && [ "$answer" != "n" ]; do
     echo -n "Show full license text? [y/n] "
@@ -57,7 +57,9 @@ generic_command_setup() {
   cmdarg "D" "debug" "Print each shell command as it's executed."
   cmdarg "L" "license" "Show the license."
   disable_errors
+
   cmdarg_parse "$@"
+
   enable_errors
 
   [ "${cmdarg_cfg['debug']}" == "true" ] && enable_debug || true
@@ -106,4 +108,11 @@ EOF
   eval "export ${!cmdarg_cfg[@]}"
 
   eval $cmd
+}
+
+
+# Workaround a bug in Bash 4.3 with cmdarg's array arguments.
+create_fake_validator() {
+  eval "declare -ga $1_values"
+  eval "$1_validate() { $1_values+=(\"\$1\"); return 0; }"
 }
