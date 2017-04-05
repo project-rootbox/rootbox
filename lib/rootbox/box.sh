@@ -37,7 +37,7 @@ box.new() {
 
   export box tbox factory
 
-  [ ! -d "$box" ] || die "Box '$box' has already been created"
+  [ ! -d "$box" ] || die "Box '$name' has already been created"
   [ -f "$image" ] || die "Version $version is not yet installed"
 
   pnote "Creating box..."
@@ -51,6 +51,9 @@ box.new() {
   with_mount "$tbox/image" box_setup
 
   pnote "Saving box..."
+  sudo_perm_fix "$tbox"
+  sudo_perm_fix "$tbox/binds" 664
+  sudo_perm_fix "$tbox/image" 664
   mv "$tbox" "$box"
 }
 
@@ -73,11 +76,33 @@ mounted whenever the box is run. Can be passed multiple times." "" \
 }
 
 
-box.remove() {
-  require_root
+box.clone() {
+  srcbox="`box_path "$source"`"
+  [ -d "$srcbox" ] || die "Box '$source' does not exist"
 
+  dstbox="`box_path "$name"`"
+  [ ! -d "$dstbox" ] || die "Box '$name' has already been created"
+
+  pnote "Cloning box..."
+  cp --sparse=always -r "$srcbox" "$dstbox"
+  pnote "Clone was successful!"
+}
+
+
+box.clone::DESCR() {
+  echo "clones the given box."
+}
+
+
+box.clone::ARGS() {
+  cmdarg "s:" "source" "The name of the box to clone"
+  cmdarg "n:" "name" "The name of the new box"
+}
+
+
+box.remove() {
   box="`box_path "$name"`"
-  [ -d "$box" ] || die "Box '$box' does not exist"
+  [ -d "$box" ] || die "Box '$name' does not exist"
 
   rm "$box/binds"
   rm "$box/image"
@@ -96,7 +121,7 @@ box.run() {
   require_root
 
   box="`box_path "$name"`"
-  [ -d "$box" ] || die "Box '$box' does not exist"
+  [ -d "$box" ] || die "Box '$name' does not exist"
 
   export box command
   with_mount "$box/image" box_run_command
@@ -127,5 +152,6 @@ box.remove::ARGS() {
 
 
 register_command box.new
+register_command box.clone
 register_command box.run
 register_command box.remove

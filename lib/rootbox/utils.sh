@@ -336,6 +336,22 @@ download() {
 }
 
 
+sudo_perm_fix() {
+  local path="$1"
+  local perm="${2:-775}"
+
+  [ -n "$SUDO_USER" ] || return 0
+
+  if [ -d "$path" ]; then
+    chown -R "$SUDO_USER:$SUDO_USER" "$path"
+    chmod -R "$perm" "$path"
+  else
+    chown "$SUDO_USER:$SUDO_USER" "$path"
+    chmod "$perm" "$path"
+  fi
+}
+
+
 image_path() {
   echo "$IMAGES/alpine-$1.img"
 }
@@ -442,5 +458,5 @@ in_chroot() {
 
   IFS=$'\n'
   with_binds_unset_ifs "$mpoint" `< "$bind_file"` "$@" \
-                       "chroot '$mpoint' $command"
+                       "chroot '$mpoint' $command || :"
 }

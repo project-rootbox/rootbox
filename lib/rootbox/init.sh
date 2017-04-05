@@ -46,15 +46,8 @@ init() {
   mkdir -p "$BOXES"
   mkdir -p "$TMP"
 
-  if [ -n "$SUDO_USER" ]; then
-    chown -R "$SUDO_USER:$SUDO_USER" "$WORKSPACE"
-    if [ -n "$dir" ]; then
-      chown -R "$SUDO_USER:$SUDO_USER" "$dir"
-      chmod -R 775 "$dir"
-    else
-      chmod -R 775 "$WORKSPACE"
-    fi
-  fi
+  sudo_perm_fix "$WORKSPACE"
+  [ -n "$dir" ] && sudo_perm_fix "$path" || :
 }
 
 
