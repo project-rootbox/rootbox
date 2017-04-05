@@ -36,6 +36,7 @@ remove_old_directory() {
 
 
 init() {
+  require_ext4 ${dir:-$WORKSPACE}
   [ -e "$WORKSPACE" ] && remove_old_directory
 
   pnote "Setting up workspace..."

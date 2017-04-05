@@ -84,7 +84,7 @@ image.list::DESCR() {
 
 
 image.list::ARGS() {
-  true
+  :
 }
 
 

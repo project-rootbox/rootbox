@@ -81,7 +81,7 @@ create_fake_validator box_bind
 box.new::ARGS() {
   cmdarg "n:" "name" "The name of the new box"
   cmdarg "v?" "version" "The Alpine Linux version to use" "$DEFAULT_VER"
-  cmdarg "f?" "factory" "The image factory to use"
+  cmdarg "f?" "factory" "The location path of the image factory to use"
   cmdarg "b?" "bind" "Set the given directory to be automatically bind \
 mounted whenever the box is run. Can be passed multiple times." "" \
     box_bind_validate
@@ -111,6 +111,84 @@ box.clone::DESCR() {
 box.clone::ARGS() {
   cmdarg "s:" "source" "The name of the box to clone"
   cmdarg "n:" "name" "The name of the new box"
+}
+
+
+box.dist() {
+  require_init
+
+  box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$name' does not exist"
+
+  [ "$output" == "<name>.box" ] && output="$name.box" || :
+
+  pnote "Exporting box..."
+  bsdtar cf "$output" -C "$box" binds image
+  pnote "Successfully exported box to '$output'!"
+}
+
+
+box.dist::DESCR() {
+  echo "exports the given box for distribution."
+}
+
+
+box.dist::ARGS() {
+  cmdarg "n:" "name" "The name of the box to export"
+  cmdarg "o:" "output" "The output file" "<name>.box"
+}
+
+
+import_box() {
+  pnote "Importing box..."
+  tar xf "$path" -C "$tbox"
+}
+
+
+box.import() {
+  require_init
+
+  box="`box_path "$name"`"
+  tbox="$box.tmp"
+  export box
+
+  [ ! -d "$box" ] || die "Box '$name' has already been created"
+
+  pnote "Setting up import..."
+  mkdir -p "$tbox"
+
+  with_location "$loc" import_box dist.box
+  mv "$tbox" "$box"
+
+  pnote "Successfully imported box '$name'!"
+}
+
+
+box.import::DESCR() {
+  echo "imports an exported box into the Rootbox workspace."
+}
+
+
+box.import::ARGS() {
+  cmdarg "l:" "loc" "The location path of the box to import"
+  cmdarg "n:" "name" "The name of the new box"
+}
+
+
+box.list() {
+  require_init
+  find "$BOXES" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | \
+    sed 's/.box$//' | sort
+}
+
+
+box.list::DESCR() {
+  echo "lists all installed boxes."
+}
+
+
+box.list::ARGS() {
+  :
 }
 
 
@@ -172,5 +250,8 @@ box.remove::ARGS() {
 
 register_command box.new
 register_command box.clone
+register_command box.dist
+register_command box.import
+register_command box.list
 register_command box.run
 register_command box.remove

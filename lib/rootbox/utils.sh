@@ -254,14 +254,28 @@ join() {
 }
 
 
+require_ext4() {
+  # require_ext4 path
+  # Ensures that the given path is on an ext4 file system.
+  path=`realpath "$path"`
+  fs=`df -PT "$path" | tail -1 | tr -s ' ' | cut "-d " -f2`
+  [ "$fs" == "ext4" ] || \
+    die "Rootbox requires the workspace directory to be on an ext4 file system,\
+ but the file system it is currently on is $fs."
+}
+
+
 require_init() {
-  # Ensure that rootbox has been initialized.
+  # require_init
+  # Ensures that rootbox has been initialized.
   [ -e "$WORKSPACE" ] || die "Run 'rootbox init' to initialize rootbox."
+  require_ext4 "$WORKSPACE"
 }
 
 
 require_root() {
-  # If the executor is not root, then abort with an error message.
+  # require_root
+  # If the executor is not root, then aborts with an error message.
   [ "$EUID" -eq 0 ] || die ${1:-"This must be run as root!"}
 }
 

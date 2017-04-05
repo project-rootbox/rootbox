@@ -27,6 +27,9 @@ integrity_check() {
   check_exe chmod
   check_exe chown
   check_exe awk
+  check_exe tail
+  check_exe df
+  check_exe tr
 
   (( ${BASH_VERSINFO[0]} >= 4 )) || die "bash >= 4.3 is requried"
   (( ${BASH_VERSINFO[1]} >= 3 )) || die "bash >= 4.3 is requried"
