@@ -11,6 +11,9 @@ TMP="$WORKSPACE/tmp"
 
 
 remove_old_directory() {
+  # remove_old_directory
+  # Deletes the old workspace directory.
+
   [ "$force" == "false" ] && die "Workspace directory already exists"
   require_root "Root access is required to remove the old workspace directory."
 

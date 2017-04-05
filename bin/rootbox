@@ -8,6 +8,8 @@ set -ETe
 
 SCRIPTS=`cat <<EOF
 utils.sh
+imgtools.sh
+locations.sh
 args.sh
 init.sh
 image.sh

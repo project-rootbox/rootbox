@@ -4,6 +4,9 @@
 
 
 check_exe() {
+  # check_exe exe [message]
+  # Makes sure the given executable exists, otherwise raises an error message.
+
   local msg=${2:-"$1 is required"}
   which "$1" 2>&1 >/dev/null || die "$msg"
 }

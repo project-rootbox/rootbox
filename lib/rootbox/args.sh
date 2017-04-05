@@ -5,7 +5,25 @@
 . `dirname $0`/../lib/rootbox/cmdarg/cmdarg.sh
 
 
+# HOW COMMANDS WORK:
+
+# A command is registered using register_command. There should be three
+# functions defined associated with the command:
+
+# ${command}            - Runs the given command.
+# ${command}::ARGS      - Registers the command's arguments with cmdarg.
+# #{command}::DESCR     - Prints a description of the command to stdout.
+
+# After the arguments are parsed, the function named after the command (the
+# first one in the list) will be called, with all the arguments loaded into
+# variables. For instance, box.new will be called with the variable $name
+# pre-created, corresponding to the --name argument.
+
+
 collect_command_info() {
+  # collect_command_info
+  # Prints information about all the registered commands.
+
   for cmd in "${COMMANDS[@]}"; do
     printf '    %-15s - ' $cmd
     eval ${cmd}::DESCR
@@ -25,12 +43,18 @@ declare -a COMMANDS
 
 
 register_command() {
+  # register_command name
+  # Registers the given command.
   local name="$1"
   COMMANDS+=("$name")
 }
 
 
 show_licenses() {
+  # show_licenses
+  # Prints the licenses to stdout, as well as optionally printing the FULL
+  # license text if requested.
+
   echo "Rootbox is (c) 2017 Ryan Gonzalez and is licensed under the \
 Mozilla Public License 2.0."
   echo "Rootbox embeds cmdarg, which is (c) 2013 Andrew Kesterson and is \
@@ -68,6 +92,9 @@ generic_command_setup() {
 
 
 run_no_command() {
+  # run_no_command
+  # Runs rootbox without a command.
+
   ROOTBOX_HEADER+=$(cat <<EOF
 
 
@@ -85,6 +112,9 @@ EOF
 
 
 run_command() {
+  # run_command cmd
+  # Runs the given command (what else did you think it'd do?).
+
   local cmd="$1"
   shift
 
@@ -111,8 +141,13 @@ EOF
 }
 
 
-# Workaround a bug in Bash 4.3 with cmdarg's array arguments.
 create_fake_validator() {
+  # create_fake_validator name
+  # Creates an array ${name}_values and a function ${name}_validate. When
+  # ${name}_validate is called, it appends its argument to ${name}_values and
+  # returns 0. This is used to implement cumulative arguments, since cmdarg's
+  # array arguments don't work correctly on certain bash versions.
+
   eval "declare -ga $1_values"
   eval "$1_validate() { $1_values+=(\"\$1\"); return 0; }"
 }

@@ -4,10 +4,16 @@
 
 DEFAULT_MIRROR="http://nl.alpinelinux.org/alpine/"
 
+# Ommiting the backup superblocks significantly decreases the size of the
+# sparse image file.
 MKFS_OPTS="-t ext4 -F -Osparse_super,^has_journal -Enum_backup_sb=0"
 
 
 create_tmp_image() {
+  # create_tmp_image
+  # Creates a bare, empty ext4 sparse image file of 128GB.
+  # (On-disk, it will be more like 13MB or so.)
+
   pnote "Creating bare image..."
 
   truncate -s 128G "$tpath"
@@ -16,6 +22,9 @@ create_tmp_image() {
 
 
 image_setup() {
+  # image_setup
+  # Sets up the image version $version in the appropriate directory.
+
   local version="v$version"
   pnote "Downloading apk tools..."
 
@@ -86,7 +95,7 @@ image.remove() {
   rm -f "$path.tmp" || true
   rm "$path"
 
-  pnote "Successfully removed image '$version.'"
+  pnote "Successfully removed image '$version'."
 }
 
 

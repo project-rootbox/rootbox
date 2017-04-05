@@ -8,17 +8,26 @@ FACTORY="_factory.sh"
 
 
 load_factory() {
+  # load_factory
+  # Copies the image factory script to the box's mount point.
   cp "$path" "$mpoint/$FACTORY"
 }
 
 
 box_actual_setup() {
+  # box_actual_setup
+  # Runs /bin/ash inside the chroot, with all the bind mounts setup, which
+  # will in turn execute the factory script if it was present.
+
   in_chroot "$mpoint" "/bin/ash -c '[ -f /$FACTORY ] && . /$FACTORY || :'" \
             "$tbox/binds"
 }
 
 
 box_setup() {
+  # box_setup
+  # Sets up the box $tbox using the image factory location in $factory.
+
   if [ -n "$factory" ]; then
     pnote "Using image factory $factory..."
     with_location "$factory" load_factory "factory.sh"
@@ -33,7 +42,7 @@ box.new() {
 
   image="`image_path "v$version"`"
   box="`box_path "$name"`"
-  tbox="$box.tmp"
+  tbox="$box.tmp"  # Temporary box path.
 
   export box tbox factory
 
@@ -113,6 +122,8 @@ box.remove() {
 
 
 box_run_command() {
+  # box_run_command
+  # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
   in_chroot "$mpoint" "$command" "$box/binds" "${box_bind_values[@]}"
 }
 
