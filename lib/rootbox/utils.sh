@@ -254,6 +254,12 @@ join() {
 }
 
 
+require_init() {
+  # Ensure that rootbox has been initialized.
+  [ -e "$WORKSPACE" ] || die "Run 'rootbox init' to initialize rootbox."
+}
+
+
 require_root() {
   # If the executor is not root, then abort with an error message.
   [ "$EUID" -eq 0 ] || die ${1:-"This must be run as root!"}

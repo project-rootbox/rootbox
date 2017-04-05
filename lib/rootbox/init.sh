@@ -51,6 +51,8 @@ init() {
 
   sudo_perm_fix "$WORKSPACE"
   [ -n "$dir" ] && sudo_perm_fix "$path" || :
+
+  pnote "Rootbox has been initailized."
 }
 
 

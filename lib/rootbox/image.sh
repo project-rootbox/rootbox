@@ -45,6 +45,7 @@ image_setup() {
 
 
 image.add() {
+  require_init
   require_root
 
   local path="`image_path v$version`"
@@ -65,12 +66,13 @@ image.add::DESCR() {
 
 
 image.add::ARGS() {
-  cmdarg "v?" "version" "The Alpine Linux version to use" "$DEFAULT_VER"
+  cmdarg "v:" "version" "The Alpine Linux version to use"
   cmdarg "m?" "mirror" "The Alpine Linux mirror to use" "$DEFAULT_MIRROR"
 }
 
 
 image.list() {
+  require_init
   find "$IMAGES" -maxdepth 1 -name '*.img' -printf '%f\n' | \
     sed 's/alpine-v\([0-9].[0-9]\).img/\1/'
 }
@@ -87,6 +89,7 @@ image.list::ARGS() {
 
 
 image.remove() {
+  require_init
   require_root
 
   local path="`image_path v$version`"

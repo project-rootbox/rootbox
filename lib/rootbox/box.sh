@@ -38,6 +38,7 @@ box_setup() {
 
 
 box.new() {
+  require_init
   require_root
 
   image="`image_path "v$version"`"
@@ -86,6 +87,8 @@ mounted whenever the box is run. Can be passed multiple times." "" \
 
 
 box.clone() {
+  require_init
+
   srcbox="`box_path "$source"`"
   [ -d "$srcbox" ] || die "Box '$source' does not exist"
 
@@ -109,18 +112,6 @@ box.clone::ARGS() {
 }
 
 
-box.remove() {
-  box="`box_path "$name"`"
-  [ -d "$box" ] || die "Box '$name' does not exist"
-
-  rm "$box/binds"
-  rm "$box/image"
-  rmdir "$box"
-
-  pnote "Successfully removed image '$box'."
-}
-
-
 box_run_command() {
   # box_run_command
   # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
@@ -129,6 +120,7 @@ box_run_command() {
 
 
 box.run() {
+  require_init
   require_root
 
   box="`box_path "$name"`"
@@ -149,6 +141,20 @@ box.run::ARGS() {
   cmdarg "b?" "bind" "Bind mount the given directory inside the chroot before \
 the command is run. Can be passed multiple times." "" \
     box_bind_validate
+}
+
+
+box.remove() {
+  require_init
+
+  box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$name' does not exist"
+
+  rm "$box/binds"
+  rm "$box/image"
+  rmdir "$box"
+
+  pnote "Successfully removed image '$box'."
 }
 
 
