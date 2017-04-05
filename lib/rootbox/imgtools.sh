@@ -54,7 +54,7 @@ with_mount() {
   local img="$1"
   local block="$2"
 
-  local mpoint="$img.mnt"
+  local mpoint="`mktempd $MNT`"
   [ -d "$mpoint" ] && umount_if_mounted "$mpoint"
   mkdir -p "$mpoint"
 

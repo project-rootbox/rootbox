@@ -65,6 +65,8 @@ box.new() {
   sudo_perm_fix "$tbox/binds" 664
   sudo_perm_fix "$tbox/image" 664
   mv "$tbox" "$box"
+
+  pnote "Setup successful!"
 }
 
 

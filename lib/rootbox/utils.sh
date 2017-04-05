@@ -224,7 +224,7 @@ in_tmp() {
   # Runs the given block inside a temporary directory.
 
   local block="$1"
-  local dir=`mktemp -d "$TMP/XXXXXXXXXX"`
+  local dir=`mktempd "$TMP"`
   export block dir
 
   safecall in_tmp_safecall "in_tmp_del '$dir'"
@@ -278,6 +278,15 @@ download() {
 
   curl "$target" -fL "$url"
   echo
+}
+
+
+mktempd() {
+  # mktempd dir
+  # Like mktemp -d, but creates the temporary directory inside the given
+  # directory.
+  local dir="$1"
+  mktemp -d "$dir/XXXXXXXXXX"
 }
 
 

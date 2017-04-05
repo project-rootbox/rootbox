@@ -7,6 +7,7 @@ INIT_SPEC="version"
 WORKSPACE="$HOME/.rootbox"
 IMAGES="$WORKSPACE/images"
 BOXES="$WORKSPACE/boxes"
+MNT="$WORKSPACE/mnt"
 TMP="$WORKSPACE/tmp"
 
 
@@ -24,11 +25,12 @@ remove_old_directory() {
     to_remove="$WORKSPACE"
   fi
 
-  if [ -d "$IMGAES" ]; then
-    for ver in `image.list`; do
-      umount_if_mounted "`image_path v$ver`.mnt"
-    done
-  fi
+  for mnt in $MNT/*; do
+    umount_if_mounted "$mnt"
+  done
+
+  [ "`ls -A "$mnt"`" ] && die "Failed to clear mount directory $MNT!!"
+
   rm -rf "$to_remove"
 }
 
@@ -47,6 +49,7 @@ init() {
 
   mkdir -p "$IMAGES"
   mkdir -p "$BOXES"
+  mkdir -p "$MNT"
   mkdir -p "$TMP"
 
   sudo_perm_fix "$WORKSPACE"
