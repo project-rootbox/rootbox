@@ -145,7 +145,7 @@ in_chroot_enter() {
     HOME=/root \
     TERM="$TERM" \
     PATH=/usr/local/bin:/usr/sbin/usr/bin:/sbin:/bin \
-    su -lc "$command" "$user"
+    su -lc "$command" "$user" ||:
 }
 
 

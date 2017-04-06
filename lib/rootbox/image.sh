@@ -51,6 +51,8 @@ if [ -d /_factory ]; then
   ls -1 /_factory/*.sh | sort -r | xargs -n1 /bin/ash
 fi
 
+echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
+
 EOF
 `
 
@@ -94,7 +96,7 @@ image.add() {
   local packages verstr
 
   if [ "$slim" == "true" ]; then
-    packages=alpine-base
+    packages="alpine-base sudo"
     verstr="${version}-nodev"
   else
     packages="alpine-base alpine-sdk"
