@@ -142,7 +142,6 @@ with_binds_unset_ifs() {
 in_chroot_enter() {
   chroot "$mpoint" \
     /usr/bin/env -i \
-    HOME=/root \
     TERM="$TERM" \
     PATH=/usr/local/bin:/usr/sbin/usr/bin:/sbin:/bin \
     su -lc "$command" "$user" ||:
