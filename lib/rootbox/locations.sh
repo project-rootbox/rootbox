@@ -30,9 +30,19 @@ with_location_git_hosted() {
   esac
 
   pnote "Downloading from $url..."
-  download "$url" "$path" || die "Invalid Git location $loc"
+  download "$url" "$path" || die "Invalid Git location $kind:$loc"
 
   local path="$PWD/$path"
+  export path
+
+  cd "$origdir"
+  eval "$wl_block"
+}
+
+
+with_location_url() {
+  download "$loc" "_download"
+  path="$PWD/_download"
   export path
 
   cd "$origdir"
@@ -64,6 +74,7 @@ with_location() {
     fi ;;
   github:*) loc="${loc#*:}"; kind=github ;;
   gitlab:*) loc="${loc#*:}"; kind=gitlab ;;
+  url:*) loc="${loc#*:}"; kind=url ;;
   file:*) loc="${loc#*:}"; kind=file ;;
   *) kind=file ;;
   esac
@@ -92,8 +103,13 @@ with_location() {
     git) in_tmp with_location_pure_git ;;
     *)   in_tmp with_location_git_hosted ;;
     esac ;;
+  url)
+    [[ "$loc" == */ ]] && loc="$loc/$default" ||:
+
+    export loc wl_block origdir
+    in_tmp with_location_url ;;
   file)
-    [ -d "$loc" ] && loc="$loc/$default" || :
+    [ -d "$loc" ] && loc="$loc/$default" ||:
     [ -e "$loc" ] || die "Invalid file location $loc"
 
     local path="`realpath "$loc"`"

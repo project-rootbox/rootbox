@@ -25,6 +25,10 @@ this box is being created with version '$version'."
 
 load_factory() {
   # load_factory mpoint loc version
+  # Loads the factory at loc, as well as its dependencies into the given
+  # mountpoint (storing as /_factory/0.sh, /_factory/1.sh, etc., in reverse
+  # order of dependencies). Also verify that the factory is compatible with the
+  # given image version.
 
   local mpoint="$1"
   local loc="$2"

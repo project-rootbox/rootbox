@@ -300,13 +300,15 @@ download() {
   # Downloads the given url to the target file. If target is not specified,
   # then it will be deduced from the URL. Exits on download failure.
 
-  url="$1"
-  target="$2"
+  local url="$1"
+  local target="$2"
 
   [ -z "$target" ] && target=-O || target="-o$target"
 
-  curl "$target" -fL "$url"
+  local ret=0
+  curl "$target" -fL "$url" || ret=1
   echo
+  return $ret
 }
 
 

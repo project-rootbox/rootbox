@@ -31,9 +31,9 @@ box.new() {
   require_init
   require_root
 
-  image="`image_path "v$version"`"
-  box="`box_path "$name"`"
-  tbox="$box.tmp"  # Temporary box path.
+  local image="`image_path "v$version"`"
+  local box="`box_path "$name"`"
+  local tbox="$box.tmp"  # Temporary box path.
 
   export box tbox factory version
 
@@ -81,10 +81,10 @@ mounted whenever the box is run. Can be passed multiple times." "" \
 box.clone() {
   require_init
 
-  srcbox="`box_path "$source"`"
+  local srcbox="`box_path "$source"`"
   [ -d "$srcbox" ] || die "Box '$source' does not exist"
 
-  dstbox="`box_path "$name"`"
+  local dstbox="`box_path "$name"`"
   [ ! -d "$dstbox" ] || die "Box '$name' has already been created"
 
   pnote "Cloning box..."
@@ -107,13 +107,23 @@ box.clone::ARGS() {
 box.dist() {
   require_init
 
-  box="`box_path "$name"`"
+  local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
 
-  [ "$output" == "<name>.box" ] && output="$name.box" || :
-
   pnote "Exporting box..."
-  bsdtar cf "$output" -C "$box" binds image
+
+  local taropts compress_ext
+  case "$compress" in
+  gzip) taropts=-z; compress_ext=.gz ;;
+  bzip2) taropts=-y; compress_ext=.bz2 ;;
+  "") ;;
+  esac
+
+  [ "$output" == "<name>.box" ] && output="$name.box$compress_ext" ||:
+
+  bsdtar cf "$output" -C "$box" $taropts binds image
+  sudo_perm_fix "$output" 664
+
   pnote "Successfully exported box to '$output'!"
 }
 
@@ -123,9 +133,14 @@ box.dist::DESCR() {
 }
 
 
+compress_validator() { [ "$1" == "bzip2" ] || [ "$1" == "gzip" ]; }
+
+
 box.dist::ARGS() {
   cmdarg "n:" "name" "The name of the box to export"
   cmdarg "o:" "output" "The output file" "<name>.box"
+  cmdarg "c?" "compress" "Compress the result with the given compression \
+method (Valid values: bzip2, gzip)" '' compress_validator
 }
 
 
@@ -138,8 +153,8 @@ import_box() {
 box.import() {
   require_init
 
-  box="`box_path "$name"`"
-  tbox="$box.tmp"
+  local box="`box_path "$name"`"
+  local tbox="$box.tmp"
   export box
 
   [ ! -d "$box" ] || die "Box '$name' has already been created"
@@ -193,7 +208,7 @@ box.run() {
   require_init
   require_root
 
-  box="`box_path "$name"`"
+  local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
 
   export box command
@@ -217,7 +232,7 @@ the command is run. Can be passed multiple times." "" \
 box.remove() {
   require_init
 
-  box="`box_path "$name"`"
+  local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
 
   rm "$box/binds"
