@@ -145,21 +145,23 @@ in_chroot_enter() {
     HOME=/root \
     TERM="$TERM" \
     PATH=/usr/local/bin:/usr/sbin/usr/bin:/sbin:/bin \
-    /bin/ash --login -c "$command" ||:
+    su -lc "$command" "$user"
 }
 
 
 in_chroot() {
-  # in_chroot mpoint command bind-file other-binds...
-  # Runs the given command inside the chroot as mpoint, using bind-file as
-  # the bind spec file as other-binds as a sequence of more bind specs.
+  # in_chroot mpoint user command bind-file other-binds...
+  # Runs the given command inside the chroot at mpoint under the given user,
+  # using bind-file as the bind spec file as other-binds as a sequence of more
+  # bind specs.
 
   local mpoint="$1"
-  local command="$2"
-  local bind_file="$3"
-  shift 3
+  local user="$2"
+  local command="$3"
+  local bind_file="$4"
+  shift 4
 
-  export mpoint command
+  export mpoint user command
 
   IFS=$'\n'
   with_binds_unset_ifs "$mpoint" `< "$bind_file"` "$@" \

@@ -45,6 +45,8 @@ rc-update add savecache shutdown
 
 apk update
 
+adduser user -g user -D
+
 if [ -d /_factory ]; then
   ls -1 /_factory/*.sh | sort -r | xargs -n1 /bin/ash
 fi

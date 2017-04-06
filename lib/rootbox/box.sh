@@ -11,7 +11,7 @@ box_actual_setup() {
   # Runs /bin/ash inside the chroot, with all the bind mounts setup, which
   # will in turn execute the factory script if it was present.
 
-  in_chroot "$mpoint" "/bin/ash /$SETUP" "$tbox/binds"
+  in_chroot "$mpoint" root "/bin/ash /$SETUP" "$tbox/binds"
 }
 
 
@@ -201,7 +201,7 @@ box.list::ARGS() {
 box_run_command() {
   # box_run_command
   # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
-  in_chroot "$mpoint" "$command" "$box/binds" "${box_bind_values[@]}"
+  in_chroot "$mpoint" "$user" "$command" "$box/binds" "${box_bind_values[@]}"
 }
 
 
@@ -212,7 +212,7 @@ box.run() {
   local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
 
-  export box command
+  export box command user
   with_mount "$box/image" box_run_command
 }
 
@@ -224,6 +224,7 @@ box.run::DESCR() {
 box.run::ARGS() {
   cmdarg "n:" "name" "The name of the box to run"
   cmdarg "c?" "command" "The command to run" "$DEFAULT_COMMAND"
+  cmdarg "u?" "user" "The user to use inside the chroot" "user"
   cmdarg "b?" "bind" "Bind mount the given directory inside the chroot before \
 the command is run. Can be passed multiple times." "" \
     box_bind_validate
