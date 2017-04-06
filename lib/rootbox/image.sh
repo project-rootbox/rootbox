@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# https://wiki.alpinelinux.org/wiki/Installing_Alpine_Linux_in_a_chroot
+
 DEFAULT_MIRROR="http://nl.alpinelinux.org/alpine/"
 
 # Ommiting the backup superblocks significantly decreases the size of the
@@ -21,6 +23,34 @@ create_tmp_image() {
 }
 
 
+RESOLV_CONF=`cat <<EOF
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+nameserver 2001:4860:4860::8888
+nameserver 2001:4860:4860::8844
+EOF
+`
+
+
+SETUP_CODE=`cat <<EOF
+#!/bin/ash
+
+rc-update add devfs sysinit
+rc-update add dmesg sysinit
+rc-update add mdev sysinit
+
+rc-update add mount-ro shutdown
+rc-update add killprocs shutdown
+rc-update add savecache shutdown
+
+apk update
+
+[ -f /$FACTORY ] && . /$FACTORY
+
+EOF
+`
+
+
 image_setup() {
   # image_setup
   # Sets up the image version $version in the appropriate directory.
@@ -38,7 +68,16 @@ image_setup() {
 
   pnote "Installing chroot into image..."
   sbin/apk.static -X "$mirror/$version/main" -U --allow-untrusted \
-                  --root "$mpoint" --initdb add alpine-base
+                  --root "$mpoint" --initdb add $packages
+
+  pnote "Making final image adjustments..."
+  mkdir -p "$mpoint/root"
+  mkdir -p "$mpoint/etc/apk"
+
+  echo "$RESOLV_CONF" > "$mpoint/etc/resolv.conf"
+  echo "$mirror/$version/main" > "$mpoint/etc/apk/repositories"
+  echo "$mirror/$version/community" >> "$mpoint/etc/apk/repositories"
+  echo "$SETUP_CODE" > "$mpoint/$SETUP"
 
   mv "$tpath" "$path"
 }
@@ -48,12 +87,22 @@ image.add() {
   require_init
   require_root
 
-  local path="`image_path v$version`"
+  local packages verstr
+
+  if [ "$slim" == "true" ]; then
+    packages=alpine-base
+    verstr="${version}-nodev"
+  else
+    packages="alpine-base alpine-sdk"
+    verstr="$version"
+  fi
+
+  local path="`image_path v$verstr`"
   local tpath="$path.tmp"
-  [ -f "$path" ] && quit "Version $version was already downloaded"
+  [ -f "$path" ] && quit "Version $verstr was already downloaded"
   rm -rf "$path" "$tpath"
 
-  export version mirror path
+  export version mirror path packages
 
   create_tmp_image
   with_mount "$tpath" "in_tmp image_setup"
@@ -68,6 +117,8 @@ image.add::DESCR() {
 image.add::ARGS() {
   cmdarg "v:" "version" "The Alpine Linux version to use"
   cmdarg "m?" "mirror" "The Alpine Linux mirror to use" "$DEFAULT_MIRROR"
+  cmdarg "s" "slim" "Don't install the development packages. The resulting \
+image can later be referenced via version-nodev; e.g., 3.5-nodev."
 }
 
 

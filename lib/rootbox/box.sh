@@ -19,8 +19,7 @@ box_actual_setup() {
   # Runs /bin/ash inside the chroot, with all the bind mounts setup, which
   # will in turn execute the factory script if it was present.
 
-  in_chroot "$mpoint" "/bin/ash -c '[ -f /$FACTORY ] && . /$FACTORY || :'" \
-            "$tbox/binds"
+  in_chroot "$mpoint" "/bin/ash /$SETUP" "$tbox/binds"
 }
 
 
@@ -33,7 +32,7 @@ box_setup() {
     with_location "$factory" load_factory "factory.sh"
   fi
 
-  safecall box_actual_setup "rm -f '$mpoint/$FACTORY'"
+  safecall box_actual_setup "rm -f '$mpoint/$FACTORY' '$mpoint/$SETUP'"
 }
 
 
@@ -234,7 +233,7 @@ box.remove() {
   rm "$box/image"
   rmdir "$box"
 
-  pnote "Successfully removed image '$box'."
+  pnote "Successfully removed box '$name'."
 }
 
 

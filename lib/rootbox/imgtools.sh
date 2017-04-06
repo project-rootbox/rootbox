@@ -31,7 +31,8 @@ umount_if_mounted() {
   # If the given directory is a loop or bind mount, then unmount it, and delete
   # the directory.
   mount | grep -q "`realpath "$1"`" && umount -l "$1"
-  rmdir "$1"
+  # XXX: Special-case /dev.
+  [ "`basename $1`" != "dev" ] && rmdir "$1" ||:
 }
 
 
@@ -108,7 +109,7 @@ with_binds_impl() {
     local spec="${rest[0]}"
     local block="${rest[1]}"
     with_bind "$root" "$spec" "$block" ;;
-  "3")
+  *)
     local first_spec="${rest[0]}"
     rest=("${rest[@]:1}")
     export rest
@@ -150,5 +151,6 @@ in_chroot() {
 
   IFS=$'\n'
   with_binds_unset_ifs "$mpoint" `< "$bind_file"` "$@" \
+                       /dev///dev /sys///sys /proc///proc \
                        "chroot '$mpoint' $command || :"
 }
