@@ -61,7 +61,7 @@ with_mount() {
 
   export block img mpoint
 
-  safecall with_mount_safecall "with_mount_del '$mpoint'"
+  safecall with_mount_safecall "with_mount_del `proper_quote "$mpoint"`"
 }
 
 
@@ -95,7 +95,7 @@ with_bind() {
   sudo mount --bind "$bind" "$path"
 
   export block
-  safecall with_bind_safecall "with_bind_del '$path'"
+  safecall with_bind_safecall "with_bind_del `proper_quote "$path"`"
 }
 
 
@@ -139,6 +139,16 @@ with_binds_unset_ifs() {
 }
 
 
+in_chroot_enter() {
+  chroot "$mpoint" \
+    /usr/bin/env -i \
+    HOME=/root \
+    TERM="$TERM" \
+    PATH=/usr/local/bin:/usr/sbin/usr/bin:/sbin:/bin \
+    /bin/ash --login -c "$command" ||:
+}
+
+
 in_chroot() {
   # in_chroot mpoint command bind-file other-binds...
   # Runs the given command inside the chroot as mpoint, using bind-file as
@@ -149,8 +159,10 @@ in_chroot() {
   local bind_file="$3"
   shift 3
 
+  export mpoint command
+
   IFS=$'\n'
   with_binds_unset_ifs "$mpoint" `< "$bind_file"` "$@" \
                        /dev///dev /sys///sys /proc///proc \
-                       "chroot '$mpoint' $command || :"
+                       in_chroot_enter
 }

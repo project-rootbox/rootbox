@@ -23,7 +23,8 @@ box_setup() {
     load_factory "$mpoint" "$factory" "$version"
   fi
 
-  safecall box_actual_setup "rm -rf '$mpoint/_factory' '$mpoint/$SETUP'"
+  safecall box_actual_setup \
+    "rm -rf `proper_quote "$mpoint/_factory"` `proper_quote "$mpoint/$SETUP"`"
 }
 
 

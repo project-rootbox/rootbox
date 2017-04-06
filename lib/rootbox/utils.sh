@@ -229,7 +229,7 @@ in_tmp() {
   local dir=`mktempd "$TMP"`
   export block dir
 
-  safecall in_tmp_safecall "in_tmp_del '$dir'"
+  safecall in_tmp_safecall "in_tmp_del `proper_quote "$dir"`"
 }
 
 
@@ -337,4 +337,13 @@ sudo_perm_fix() {
     chown "$SUDO_USER:$SUDO_USER" "$path"
     chmod "$perm" "$path"
   fi
+}
+
+
+proper_quote() {
+  # proper_quote str
+  # Escape and quote the string with single quotes.
+
+  local str="$1"
+  echo "$str" | sed "s/'/'\"'\"'/g;s/^/'/;s/$/'/"
 }
