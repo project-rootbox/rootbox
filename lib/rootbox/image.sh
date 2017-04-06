@@ -46,12 +46,12 @@ rc-update add savecache shutdown
 apk update
 
 adduser user -g user -G abuild -D
+echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
 
 if [ -d /_factory ]; then
   ls -1 /_factory/*.sh | sort -r | sudo -u user xargs -n1 /bin/ash
 fi
 
-echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
 EOF
 `
 
