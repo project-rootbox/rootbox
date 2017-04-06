@@ -61,7 +61,7 @@ pnote() {
 
 perror() {
   # Prints the given text, using the C_ERROR formatting.
-  println "$C_ERROR$@"
+  println "$C_ERROR$@" >&2
 }
 
 
@@ -253,6 +253,19 @@ join() {
   shift
   local ret="${*/#/$sep}"
   echo ${ret#$sep}
+}
+
+
+lbgrep() {
+  # lbgrep before match file
+  # Matches the text using a pattern equivalent to `(?<=before)match`, printing
+  # only the matching part (i.e. not the before part).
+
+  local before="$1"
+  local match="$2"
+  local file="$3"
+
+  grep -o "$before$match" "$file" | sed "s/^$before//g"
 }
 
 

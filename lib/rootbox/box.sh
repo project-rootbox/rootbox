@@ -4,14 +4,6 @@
 
 
 DEFAULT_COMMAND="/bin/ash -i"
-FACTORY="_factory.sh"
-
-
-load_factory() {
-  # load_factory
-  # Copies the image factory script to the box's mount point.
-  cp "$path" "$mpoint/$FACTORY"
-}
 
 
 box_actual_setup() {
@@ -28,11 +20,10 @@ box_setup() {
   # Sets up the box $tbox using the image factory location in $factory.
 
   if [ -n "$factory" ]; then
-    pnote "Using image factory $factory..."
-    with_location "$factory" load_factory "factory.sh"
+    load_factory "$mpoint" "$factory" "$version"
   fi
 
-  safecall box_actual_setup "rm -f '$mpoint/$FACTORY' '$mpoint/$SETUP'"
+  safecall box_actual_setup "rm -rf '$mpoint/_factory' '$mpoint/$SETUP'"
 }
 
 
@@ -44,10 +35,10 @@ box.new() {
   box="`box_path "$name"`"
   tbox="$box.tmp"  # Temporary box path.
 
-  export box tbox factory
+  export box tbox factory version
 
   [ ! -d "$box" ] || die "Box '$name' has already been created"
-  [ -f "$image" ] || die "Version $version is not yet installed"
+  [ -f "$image" ] || die "Image $version is not yet installed"
 
   pnote "Creating box..."
 

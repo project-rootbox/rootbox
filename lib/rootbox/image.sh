@@ -45,7 +45,9 @@ rc-update add savecache shutdown
 
 apk update
 
-[ -f /$FACTORY ] && . /$FACTORY
+if [ -d /_factory ]; then
+  ls -1 /_factory/*.sh | sort -r | xargs -n1 /bin/ash
+fi
 
 EOF
 `
@@ -106,6 +108,8 @@ image.add() {
 
   create_tmp_image
   with_mount "$tpath" "in_tmp image_setup"
+
+  pnote "Image creation successful!"
 }
 
 

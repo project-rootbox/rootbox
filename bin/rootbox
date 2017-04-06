@@ -10,6 +10,7 @@ SCRIPTS=`cat <<EOF
 utils.sh
 imgtools.sh
 locations.sh
+factory.sh
 args.sh
 init.sh
 image.sh

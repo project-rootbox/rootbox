@@ -30,6 +30,7 @@ integrity_check() {
   check_exe tail
   check_exe df
   check_exe tr
+  check_exe grep
 
   (( ${BASH_VERSINFO[0]} >= 4 )) || die "bash >= 4.3 is requried"
   (( ${BASH_VERSINFO[1]} >= 3 )) || die "bash >= 4.3 is requried"
