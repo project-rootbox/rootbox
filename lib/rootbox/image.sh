@@ -132,7 +132,7 @@ image can later be referenced via version-nodev; e.g., 3.5-nodev."
 image.list() {
   require_init
   find "$IMAGES" -maxdepth 1 -name '*.img' -printf '%f\n' | \
-    sed 's/alpine-v\([0-9].[0-9]\).img/\1/'
+    sed 's/alpine-v\([0-9].[0-9]\(-nodev\)*\).img/\1/'
 }
 
 
