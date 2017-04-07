@@ -15,4 +15,4 @@ curl -fL "$URL" -o rootbox.tar.gz
 tar xvf rootbox.tar.gz
 
 cd rootbox-master
-sudo sh install.sh "$1"
+sh install.sh "$1"
