@@ -49,6 +49,7 @@ adduser user -g user -G abuild -D
 echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
 
 if [ -d /_factory ]; then
+  cd /home/user
   ls -1 /_factory/*.sh | sort -r | sudo -u user xargs -n1 /bin/ash
 fi
 
@@ -122,10 +123,10 @@ image.add::DESCR() {
 
 
 image.add::ARGS() {
-  cmdarg "v:" "version" "The Alpine Linux version to use"
-  cmdarg "m?" "mirror" "The Alpine Linux mirror to use" "$DEFAULT_MIRROR"
-  cmdarg "s" "slim" "Don't install the development packages. The resulting \
-image can later be referenced via version-nodev; e.g., 3.5-nodev."
+  add_positional "version" "The Alpine Linux version to use"
+  add_value_flag "m" "mirror" "The Alpine Linux mirror to use" "$DEFAULT_MIRROR"
+  add_bool_flag "s" "slim" "Don't install the development packages. The \
+resulting image can later be referenced via version-nodev; e.g., 3.5-nodev."
 }
 
 
@@ -153,8 +154,8 @@ image.remove() {
   local path="`image_path v$version`"
   [ -f "$path" ] || die "Version $version is not yet installed"
   [ -d "$path.mnt" ] && umount_if_mounted "$path.mnt"
-  rm -f "$path.tmp" || :
-  rm "$path"
+  rm -f "$path.tmp" ||:
+  rm -f "$path"
 
   pnote "Successfully removed image '$version'."
 }
@@ -166,7 +167,7 @@ image.remove::DESCR() {
 
 
 image.remove::ARGS() {
-  cmdarg "v:" "version" "The Alpine Linux version to remove"
+  add_positional "version" "The Alpine Linux version to remove"
 }
 
 

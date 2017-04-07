@@ -28,6 +28,15 @@ box_setup() {
 }
 
 
+fix_box_permissions() {
+  local box="$1"
+
+  sudo_perm_fix "$box"
+  sudo_perm_fix "$box/binds" 664
+  sudo_perm_fix "$box/image" 664
+}
+
+
 box.new() {
   require_init
   require_root
@@ -45,17 +54,16 @@ box.new() {
 
   mkdir -p "$tbox"
 
-  echo -e `join "\n" "${box_bind_values[@]}"` > "$tbox/binds"
+  echo -e `join "\n" "${bind[@]}"` > "$tbox/binds"
   cp --sparse=always "$image" "$tbox/image"
 
   pnote "Setting up box..."
   with_mount "$tbox/image" box_setup
 
   pnote "Saving box..."
-  sudo_perm_fix "$tbox"
-  sudo_perm_fix "$tbox/binds" 664
-  sudo_perm_fix "$tbox/image" 664
+  fix_box_permissions "$tbox"
   mv "$tbox" "$box"
+  fix_box_permissions "$box" ||:
 
   pnote "Setup successful!"
 }
@@ -66,16 +74,14 @@ box.new::DESCR() {
 }
 
 
-create_fake_validator box_bind
-
-
 box.new::ARGS() {
-  cmdarg "n:" "name" "The name of the new box"
-  cmdarg "v?" "version" "The Alpine Linux version to use" "$DEFAULT_VER"
-  cmdarg "f?" "factory" "The location path of the image factory to use"
-  cmdarg "b?" "bind" "Set the given directory to be automatically bind \
-mounted whenever the box is run. Can be passed multiple times." "" \
-    box_bind_validate
+  add_positional "name" "The name of the new box"
+  add_positional "bind" "Set the given directory to be automatically bind \
+mounted whenever the box is run. Can be passed multiple times." nargs=*
+
+  add_value_flag "v" "version" "The Alpine Linux version to use" "$DEFAULT_VER"
+  add_value_flag "f" "factory" "The location path of the image factory to use" \
+                 ""
 }
 
 
@@ -89,7 +95,10 @@ box.clone() {
   [ ! -d "$dstbox" ] || die "Box '$name' has already been created"
 
   pnote "Cloning box..."
+
   cp --sparse=always -r "$srcbox" "$dstbox"
+  fix_box_permissions "$dstbox"
+
   pnote "Clone was successful!"
 }
 
@@ -100,8 +109,8 @@ box.clone::DESCR() {
 
 
 box.clone::ARGS() {
-  cmdarg "s:" "source" "The name of the box to clone"
-  cmdarg "n:" "name" "The name of the new box"
+  add_positional "source" "The name of the box to clone"
+  add_positional "name" "The name of the new box"
 }
 
 
@@ -117,10 +126,10 @@ box.dist() {
   case "$compress" in
   gzip) taropts=-z; compress_ext=.gz ;;
   bzip2) taropts=-y; compress_ext=.bz2 ;;
-  "") ;;
+  none) ;;
   esac
 
-  [ "$output" == "<name>.box" ] && output="$name.box$compress_ext" ||:
+  [ "$output" == '$name.box' ] && output="$name.box$compress_ext" ||:
 
   bsdtar cf "$output" -C "$box" $taropts binds image
   sudo_perm_fix "$output" 664
@@ -134,14 +143,12 @@ box.dist::DESCR() {
 }
 
 
-compress_validator() { [ "$1" == "bzip2" ] || [ "$1" == "gzip" ]; }
-
-
 box.dist::ARGS() {
-  cmdarg "n:" "name" "The name of the box to export"
-  cmdarg "o:" "output" "The output file" "<name>.box"
-  cmdarg "c?" "compress" "Compress the result with the given compression \
-method (Valid values: bzip2, gzip)" '' compress_validator
+  add_positional "name" "The name of the box to export"
+  add_value_flag "o" "output" "The output file" '$name.box'
+  add_value_flag "c" "compress" "Compress the result with the given \
+compression method (Valid values: none, bzip2, gzip)" "none" \
+    "choices=none|bzip2|gzip"
 }
 
 
@@ -164,6 +171,7 @@ box.import() {
   mkdir -p "$tbox"
 
   with_location "$loc" import_box dist.box
+  fix_box_permissions "$tbox"
   mv "$tbox" "$box"
 
   pnote "Successfully imported box '$name'!"
@@ -176,8 +184,8 @@ box.import::DESCR() {
 
 
 box.import::ARGS() {
-  cmdarg "l:" "loc" "The location path of the box to import"
-  cmdarg "n:" "name" "The name of the new box"
+  add_positional "loc" "The location path of the box to import"
+  add_positional "name" "The name of the new box"
 }
 
 
@@ -201,7 +209,7 @@ box.list::ARGS() {
 box_run_command() {
   # box_run_command
   # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
-  in_chroot "$mpoint" "$user" "$command" "$box/binds" "${box_bind_values[@]}"
+  in_chroot "$mpoint" "$user" "$command" "$box/binds" "${bind[@]}"
 }
 
 
@@ -222,12 +230,12 @@ box.run::DESCR() {
 }
 
 box.run::ARGS() {
-  cmdarg "n:" "name" "The name of the box to run"
-  cmdarg "c?" "command" "The command to run" "$DEFAULT_COMMAND"
-  cmdarg "u?" "user" "The user to use inside the chroot" "user"
-  cmdarg "b?" "bind" "Bind mount the given directory inside the chroot before \
-the command is run. Can be passed multiple times." "" \
-    box_bind_validate
+  add_positional "name" "The name of the box to run"
+  add_positional "bind" "Bind mount the given directory inside the chroot \
+before the command is run. Can be passed multiple times." nargs=*
+
+  add_value_flag "c" "command" "The command to run" "$DEFAULT_COMMAND"
+  add_value_flag "u" "user" "The user to use inside the chroot" "user"
 }
 
 
@@ -237,8 +245,8 @@ box.remove() {
   local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
 
-  rm "$box/binds"
-  rm "$box/image"
+  rm -f "$box/binds"
+  rm -f "$box/image"
   rmdir "$box"
 
   pnote "Successfully removed box '$name'."
@@ -251,7 +259,7 @@ box.remove::DESCR() {
 
 
 box.remove::ARGS() {
-  cmdarg "n:" "name" "The name of the box to delete"
+  add_positional "name" "The name of the box to delete"
 }
 
 

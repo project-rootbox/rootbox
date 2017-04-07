@@ -36,17 +36,13 @@ remove_old_directory() {
 
 
 init() {
-  require_ext4 ${dir:-$WORKSPACE}
+  require_ext4 "$dir"
   [ -e "$WORKSPACE" ] && remove_old_directory
 
   pnote "Setting up workspace..."
 
-  if [ -n "$dir" ]; then
-    mkdir -p "$dir"
-    ln -sf "$dir" "$WORKSPACE"
-  else
-    mkdir -p "$WORKSPACE"
-  fi
+  mkdir -p "$dir"
+  [ "$dir" != "$WORKSPACE" ] && ln -sf "$dir" "$WORKSPACE"
 
   mkdir -p "$IMAGES"
   mkdir -p "$BOXES"
@@ -54,21 +50,21 @@ init() {
   mkdir -p "$TMP"
 
   sudo_perm_fix "$WORKSPACE"
-  [ -n "$dir" ] && sudo_perm_fix "$path" || :
+  [ "$dir" != "$WORKSPACE" ] && sudo_perm_fix "$dir" ||:
 
   pnote "Rootbox has been initailized."
 }
 
 
 init::DESCR() {
-  echo "initailizes rootbox using the given arguments"
+  echo "initailizes rootbox using the given arguments."
 }
 
 
 init::ARGS() {
-  cmdarg "d?" "dir" "The data directory (Default \"$WORKSPACE\")"
-  cmdarg "f" "force" "Force initialization, even if rootbox has already been \
-initailized (WARNING: this will delete your previous data directory!)" "false"
+  add_value_flag "d" "dir" "The data directory" "$WORKSPACE"
+  add_bool_flag "f" "force" "Force initialization, even if rootbox has already \
+been initailized (WARNING: this will delete your previous data directory!)"
 }
 
 

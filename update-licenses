@@ -5,10 +5,10 @@ cat > LICENSE-THIRD-PARTY <<EOF
 ==============================================
 
 **********************************************
-              lib/rootbox/cmdarg
+            lib/rootbox/argparser
 **********************************************
 
-`cat lib/rootbox/cmdarg/LICENSE.txt`
+`cat lib/rootbox/argparser/LICENSE`
 EOF
 
 cp LICENSE* lib/rootbox

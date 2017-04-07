@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-. `dirname $0`/../lib/rootbox/cmdarg/cmdarg.sh
+. `dirname $0`/../lib/rootbox/argparser/argparser
 
 
 # HOW COMMANDS WORK:
@@ -11,7 +11,7 @@
 # functions defined associated with the command:
 
 # ${command}            - Runs the given command.
-# ${command}::ARGS      - Registers the command's arguments with cmdarg.
+# ${command}::ARGS      - Registers the command's arguments with argparser.
 # #{command}::DESCR     - Prints a description of the command to stdout.
 
 # After the arguments are parsed, the function named after the command (the
@@ -32,6 +32,7 @@ collect_command_info() {
 
 
 ROOTBOX_HEADER=$(cat <<EOF
+
 rootbox is a set of scripts that makes it easy to create and distribute Alpine \
 Linux-based chroots for development purposes.
 
@@ -50,6 +51,47 @@ register_command() {
 }
 
 
+add_bool_flag() {
+  # add_bool_flag short long help [options...]
+  # Adds the given boolean flag to the argparser parser.
+
+  local short="$1"
+  local long="$2"
+  local help="$3"
+  shift 3
+
+  argparser_add_arg "--$long" "-$short" "desc=$help" \
+                    default=false const=true nargs=0 "$@"
+}
+
+
+add_value_flag() {
+  # add_value_flag short long help default [options...]
+  # Adds the given value flag to the argparser parser.
+
+  local short="$1"
+  local long="$2"
+  local help="$3"
+  local default="$4"
+  shift 4
+
+  argparser_add_arg "--$long" "-$short" "desc=$help (Default: \"$default\")" \
+                    "default=$default" nargs=1 "$@"
+}
+
+
+add_positional() {
+  # add_positional name help [options...]
+  # Adds the given positional argument to the argparser parser.
+
+  local name="$1"
+  local help="$2"
+  shift 2
+
+  argparser_add_arg "$name" "desc=$help" nargs=1 "metavar=<$name>" "$@"
+}
+
+
 show_licenses() {
   # show_licenses
   # Prints the licenses to stdout, as well as optionally printing the FULL
@@ -57,8 +99,8 @@ show_licenses() {
 
   echo "Rootbox is (c) 2017 Ryan Gonzalez and is licensed under the \
 Mozilla Public License 2.0."
-  echo "Rootbox embeds cmdarg, which is (c) 2013 Andrew Kesterson and is \
-licensed under the MIT license."
+  echo "Rootbox embeds argparser, which is (c) 2016 Ekeyme Mo and is licensed \
+under the MIT license."
 
   while [ "$answer" != "y" ] && [ "$answer" != "n" ]; do
     echo -n "Show full license text? [y/n] "
@@ -74,20 +116,22 @@ licensed under the MIT license."
 }
 
 
+init_argparser() {
+  local prefix="$1"
+  argparser "$prefix" "desc=$ROOTBOX_HEADER"
+}
+
+
 generic_command_setup() {
-  cmdarg_info "header" "$ROOTBOX_HEADER"
-  cmdarg_info "copyright" "(C) 2017"
-  cmdarg_info "author" "Ryan Gonzalez"
-  cmdarg "D" "debug" "Print each shell command as it's executed."
-  cmdarg "L" "license" "Show the license."
+  add_bool_flag "D" "debug" "Print each shell command as it's executed."
+  add_bool_flag "L" "license" "Show the license."
+
   disable_errors
-
-  cmdarg_parse "$@"
-
+  argparser_parse "$@"
   enable_errors
 
-  [ "${cmdarg_cfg['debug']}" == "true" ] && enable_debug || true
-  [ "${cmdarg_cfg['license']}" == "true" ] && show_licenses || true
+  [ "$debug" == "true" ] && enable_debug || true
+  [ "$license" == "true" ] && show_licenses || true
 }
 
 
@@ -98,14 +142,13 @@ run_no_command() {
   ROOTBOX_HEADER+=$(cat <<EOF
 
 
-usage: `basename $0` <command> [<args>]
-
 Valid commands are:
 
 `collect_command_info`
 EOF
   )
 
+  init_argparser "`basename $0` <command> <command-specific arguments>"
   generic_command_setup "$@"
   die "A command is required!"
 }
@@ -120,34 +163,17 @@ run_command() {
 
   [[ " ${COMMANDS[@]} " =~ " $cmd " ]] || \
     die "Invalid command '$cmd'; use --help for help"
+
   ROOTBOX_HEADER+=$(cat <<EOF
 
-
-usage: `basename $0` $cmd [<args>]
 
 $cmd `eval ${cmd}::DESCR`
 EOF
   )
-  eval ${cmd}::ARGS
 
+  init_argparser "`basename $0` $cmd"
+  eval ${cmd}::ARGS
   generic_command_setup "$@"
 
-  for key in "${!cmdarg_cfg[@]}"; do
-    eval "local $key=`proper_quote "${cmdarg_cfg[$key]}"`"
-  done
-  eval "export ${!cmdarg_cfg[@]}"
-
   eval $cmd
-}
-
-
-create_fake_validator() {
-  # create_fake_validator name
-  # Creates an array ${name}_values and a function ${name}_validate. When
-  # ${name}_validate is called, it appends its argument to ${name}_values and
-  # returns 0. This is used to implement cumulative arguments, since cmdarg's
-  # array arguments don't work correctly on certain bash versions.
-
-  eval "declare -ga $1_values"
-  eval "$1_validate() { $1_values+=(\"\$1\"); return 0; }"
 }
