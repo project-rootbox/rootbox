@@ -10,8 +10,8 @@ URL="https://github.com/project-rootbox/rootbox/archive/master.tar.gz"
 
 echo "Running system checks..."
 
-[ `id -u` != 0 ] || error "This should not be run as root!"
-which "$1" >/dev/null 2>&1 || echo "curl is required to download Rootbox."
+[ `id -u` != 0 ] || echo "This should not be run as root!" >&2
+which "$1" >/dev/null 2>&1 || echo "curl is required to download Rootbox." >&2
 
 set -x
 
