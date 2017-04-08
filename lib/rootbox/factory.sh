@@ -18,8 +18,8 @@ this box is being created with version '$version'."
   local nextloc
   while read -r nextloc; do
     [ -z "$nextloc" ] && continue
-    load_factory "$mpoint" "$nextloc"
-  done <<<"`lbgrep "#:DEPENDS " "\(.*\)" "$tgt"`"
+    load_factory "$mpoint" "$nextloc" "$version"
+  done <<<"`lbgrep "#:DEPENDS " "\(.*\)" "$tgt" | tac`"
 }
 
 
