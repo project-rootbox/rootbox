@@ -80,9 +80,16 @@ image_setup() {
   mkdir -p "$mpoint/root"
   mkdir -p "$mpoint/etc/apk"
 
+  local REPOS=`cat <<EOF
+$mirror/$version/main
+$mirror/$version/community
+@edge $mirror/edge/main
+@testing $mirror/edge/testing
+EOF
+`
+
   echo "$RESOLV_CONF" > "$mpoint/etc/resolv.conf"
-  echo "$mirror/$version/main" > "$mpoint/etc/apk/repositories"
-  echo "$mirror/$version/community" >> "$mpoint/etc/apk/repositories"
+  echo "$REPOS" > "$mpoint/etc/apk/repositories"
   echo "$SETUP_CODE" > "$mpoint/$SETUP"
 
   mv "$tpath" "$path"
