@@ -164,7 +164,7 @@ trapchain() {
   local sig="$2"
 
   chain=TRAPCHAIN_$sig
-  eval "$chain+=('$func')"
+  eval "$chain=('$func' \"\${$chain[@]}\")"
   update_trapchain $sig
 }
 
@@ -176,9 +176,9 @@ trapchain_pop() {
   local sig="$1"
 
   chain=TRAPCHAIN_$sig
-  last=$chain[-1]
+  last=$chain[0]
   local block="${!last}"
-  unset $last
+  eval "$chain=(\"\${$chain[@]:1}\")"
 
   update_trapchain $sig
   eval "$block"
