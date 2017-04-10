@@ -140,27 +140,31 @@ with_binds_unset_ifs() {
 
 
 in_chroot_enter() {
+  [ -n "$failure" ] && onfail=die || onfail="ndie 1"
+
   chroot "$mpoint" \
     /usr/bin/env -i \
     TERM="$TERM" \
     PATH=/usr/local/bin:/usr/sbin/usr/bin:/sbin:/bin \
-    su -lc "$command" "$user" ||:
+    su -lc "$command" "$user" || $onfail "$failure"
 }
 
 
 in_chroot() {
-  # in_chroot mpoint user command bind-file other-binds...
+  # in_chroot mpoint user command failure-message bind-file other-binds...
   # Runs the given command inside the chroot at mpoint under the given user,
   # using bind-file as the bind spec file as other-binds as a sequence of more
-  # bind specs.
+  # bind specs. Failure-message, if not empty, will be printing upon command
+  # failure.
 
   local mpoint="$1"
   local user="$2"
   local command="$3"
-  local bind_file="$4"
-  shift 4
+  local failure="$4"
+  local bind_file="$5"
+  shift 5
 
-  export mpoint user command
+  export mpoint user command failure
 
   IFS=$'\n'
   with_binds_unset_ifs "$mpoint" `< "$bind_file"` "$@" \

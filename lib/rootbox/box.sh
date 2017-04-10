@@ -11,7 +11,8 @@ box_actual_setup() {
   # Runs /bin/ash inside the chroot, with all the bind mounts setup, which
   # will in turn execute the factory script if it was present.
 
-  in_chroot "$mpoint" root "/bin/ash /$SETUP" "$tbox/binds"
+  in_chroot "$mpoint" root "/bin/ash /$SETUP" "Failed to setup box" \
+            "$tbox/binds"
 }
 
 
@@ -223,7 +224,7 @@ box_run_command() {
     command="export DISPLAY=$DISPLAY; $command"
   fi
 
-  in_chroot "$mpoint" "$user" "$command" "$box/binds" "${bind[@]}"
+  in_chroot "$mpoint" "$user" "$command" "" "$box/binds" "${bind[@]}"
 }
 
 
