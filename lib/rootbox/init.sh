@@ -36,12 +36,12 @@ remove_old_directory() {
 
 
 init() {
-  require_ext4 "$dir"
   [ -e "$WORKSPACE" ] && remove_old_directory
 
   pnote "Setting up workspace..."
 
   mkdir -p "$dir"
+  require_sparse "$dir"
   [ "$dir" != "$WORKSPACE" ] && ln -sf "$dir" "$WORKSPACE"
 
   mkdir -p "$IMAGES"

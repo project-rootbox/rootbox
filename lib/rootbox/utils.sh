@@ -269,14 +269,18 @@ lbgrep() {
 }
 
 
-require_ext4() {
-  # require_ext4 path
-  # Ensures that the given path is on an ext4 file system.
-  path=`realpath "$path"`
-  fs=`df -PT "$path" | tail -1 | tr -s ' ' | cut "-d " -f2`
-  [ "$fs" == "ext4" ] || \
-    die "Rootbox requires the workspace directory to be on an ext4 file system,\
- but the file system it is currently on is $fs."
+require_sparse() {
+  # require_sparse dir
+  # Ensures that the given path is on a file system that supports sparse files.
+
+  dir="`realpath "$1"`"
+  sparse_test="$dir/.sparse-test"
+  rm -f "$sparse_test"
+  truncate -s 4MB "$sparse_test"
+  (( `du "$sparse_test" | cut -f1` == 0 )) || \
+    die "Rootbox requires the workspace directory to be on a file system that \
+supports sparse files."
+  rm -f "$sparse_test"
 }
 
 
@@ -284,7 +288,7 @@ require_init() {
   # require_init
   # Ensures that rootbox has been initialized.
   [ -e "$WORKSPACE" ] || die "Run 'rootbox init' to initialize rootbox."
-  require_ext4 "$WORKSPACE"
+  require_sparse "$WORKSPACE"
 }
 
 
