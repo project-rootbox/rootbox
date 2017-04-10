@@ -209,6 +209,20 @@ box.list::ARGS() {
 box_run_command() {
   # box_run_command
   # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
+
+  if [ "$x11" == "true" ]; then
+    [ -n "$DISPLAY" ] || die '$DISPLAY is empty!'
+
+    while read -r cookie; do
+      xauth extract "$mpoint/root/.Xauthority" "$cookie"
+      xauth extract "$mpoint/home/user/.Xauthority" "$cookie"
+      sudo_perm_fix "$mpoint/home/user/.Xauthority" 644
+    done <<<"`xauth list "$DISPLAY" | cut "-d " -f1`"
+
+    bind+=("/tmp/.X11-unix///tmp/.X11-unix")
+    command="export DISPLAY=$DISPLAY; $command"
+  fi
+
   in_chroot "$mpoint" "$user" "$command" "$box/binds" "${bind[@]}"
 }
 
@@ -220,7 +234,7 @@ box.run() {
   local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
 
-  export box command user
+  export box command user x11
   with_mount "$box/image" box_run_command
 }
 
@@ -233,7 +247,7 @@ box.run::ARGS() {
   add_positional "name" "The name of the box to run"
   add_positional "bind" "Bind mount the given directory inside the chroot \
 before the command is run. Can be passed multiple times." nargs=*
-
+  add_bool_flag "x" "x11" "Add X11 support upon startup"
   add_value_flag "c" "command" "The command to run" "$DEFAULT_COMMAND"
   add_value_flag "u" "user" "The user to use inside the chroot" "user"
 }
