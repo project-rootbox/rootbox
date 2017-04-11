@@ -67,6 +67,10 @@ box.new() {
   fix_box_permissions "$box" ||:
 
   pnote "Setup successful!"
+
+  if [ "$run" == "true" ]; then
+    "$0" box.run "$name"
+  fi
 }
 
 
@@ -79,10 +83,10 @@ box.new::ARGS() {
   add_positional "name" "The name of the new box"
   add_positional "bind" "Set the given directory to be automatically bind \
 mounted whenever the box is run. Can be passed multiple times." nargs=*
-
   add_value_flag "v" "version" "The Alpine Linux version to use" "$DEFAULT_VER"
   add_value_flag "f" "factory" "The location path of the image factory to use" \
                  ""
+  add_bool_flag "r" "run" "Run the box after creation"
 }
 
 
