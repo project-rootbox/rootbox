@@ -4,7 +4,16 @@
 
 INIT_SPEC="version"
 
-WORKSPACE="$HOME/.rootbox"
+WORKSPACE_HOME=""
+
+if [ -n "$SUDO_USER" ]; then
+  WORKSPACE_HOME="`getent passwd $SUDO_USER | cut -d: -f6`"
+fi
+
+[ -z "$WORKSPACE_HOME" ] && WORKSPACE_HOME="$HOME" ||:
+
+WORKSPACE="$WORKSPACE_HOME/.rootbox"
+
 IMAGES="$WORKSPACE/images"
 BOXES="$WORKSPACE/boxes"
 MNT="$WORKSPACE/mnt"
