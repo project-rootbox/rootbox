@@ -48,6 +48,8 @@ box.new() {
 
   export box tbox factory version
 
+  pdebug "@image='$image' box='$box' tbox='$tbox'"
+
   [ ! -d "$box" ] || die "Box '$name' has already been created"
   [ -f "$image" ] || die "Image $version is not yet installed"
 
@@ -56,6 +58,7 @@ box.new() {
   mkdir -p "$tbox"
 
   echo -e `join "\n" "${bind[@]}"` > "$tbox/binds"
+  pdebug "binds: `cat "$tbox/binds" | tr '\n' ';'`"
   cp --sparse=always "$image" "$tbox/image"
 
   pnote "Setting up box..."
@@ -133,6 +136,8 @@ box.dist() {
   bzip2) taropts=-y; compress_ext=.bz2 ;;
   none) ;;
   esac
+
+  pdebug "@taropts='$taropts' compress_ext='$compress_ext'"
 
   [ "$output" == '$name.box' ] && output="$name.box$compress_ext" ||:
 
@@ -216,9 +221,11 @@ box_run_command() {
   # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
 
   if [ "$x11" == "true" ]; then
+    pdebug "Using X11"
     [ -n "$DISPLAY" ] || die '$DISPLAY is empty!'
 
     while read -r cookie; do
+      pdebug "X11 cookie: $cookie"
       xauth extract "$mpoint/root/.Xauthority" "$cookie"
       xauth extract "$mpoint/home/user/.Xauthority" "$cookie"
       sudo_perm_fix "$mpoint/home/user/.Xauthority" 644
@@ -227,6 +234,8 @@ box_run_command() {
     bind+=("/tmp/.X11-unix///tmp/.X11-unix")
     command="export DISPLAY=$DISPLAY; $command"
   fi
+
+  pdebug "@command='$command'"
 
   in_chroot "$mpoint" "$user" "$command" "" "$box/binds" "${bind[@]}"
 }

@@ -130,8 +130,8 @@ generic_command_setup() {
   argparser_parse "$@"
   enable_errors
 
-  [ "$debug" == "true" ] && enable_debug || true
-  [ "$license" == "true" ] && show_licenses || true
+  [ "$debug" == "true" ] && enable_debug ||:
+  [ "$license" == "true" ] && show_licenses ||:
 }
 
 

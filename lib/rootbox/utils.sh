@@ -55,7 +55,7 @@ printfln() {
 pnote() {
   # pnote text...
   # Prints the given text, using the C_NOTE formatting.
-  println "$C_NOTE$@"
+  println "$C_NOTE$@" >&2
 }
 
 
@@ -102,6 +102,7 @@ internal() {
 
 pdebug() {
   # Used to print debug messages.
+  [ "$ROOTBOX_DEBUG" == "1" ] || return 0
   printfln "$C_NOTE% 25s$CF_R :: %s" "${FUNCNAME[1]}" "$@" >&2
 }
 
@@ -115,7 +116,8 @@ cmd_fail() {
 
 enable_debug() {
   # Enables verbose debugging.
-  trap 'pdebug "$BASH_COMMAND"' DEBUG
+  ROOTBOX_DEBUG=1
+  trap 'pdebug "| $BASH_COMMAND"' DEBUG
 }
 
 
@@ -274,10 +276,12 @@ require_sparse() {
   # Ensures that the given path is on a file system that supports sparse files.
 
   dir="`realpath "$1"`"
-  sparse_test="$dir/.sparse-test"
+  local sparse_test="$dir/.sparse-test"
   rm -f "$sparse_test"
   truncate -s 4MB "$sparse_test"
-  (( `du "$sparse_test" | cut -f1` == 0 )) || \
+  local size="`du "$sparse_test" | cut -f1`"
+  pdebug "size='$size'"
+  (( $size == 0 )) || \
     die "Rootbox requires the workspace directory to be on a file system that \
 supports sparse files."
   rm -f "$sparse_test"
@@ -306,6 +310,7 @@ download() {
 
   local url="$1"
   local target="$2"
+  pdebug "@url,target: $*"
 
   [ -z "$target" ] && target=-O || target="-o$target"
 

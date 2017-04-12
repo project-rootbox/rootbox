@@ -5,10 +5,12 @@
 
 get_factory() {
   local tgt="$mpoint/_factory/`ls -1 "$mpoint/_factory" | wc -l`.sh"
+  pdebug "@tgt='$tgt'"
 
   cp "$path" "$tgt"
 
   local vers="`lbgrep "#:IMAGES " "\(.*\)" "$tgt" ||:`"
+  pdebug "vers='$vers' version='$version'"
   if [ -n "$vers" ]; then
     [[ " $vers " =~ " $version " ]] || \
       die "Factory script $loc requires one of versions '$vers', but \
@@ -18,6 +20,7 @@ this box is being created with version '$version'."
   local nextloc
   while read -r nextloc; do
     [ -z "$nextloc" ] && continue
+    pdebug "nextloc='$nextloc'"
     load_factory "$mpoint" "$nextloc" "$version"
   done <<<"`lbgrep "#:DEPENDS " "\(.*\)" "$tgt" | tac`"
 }

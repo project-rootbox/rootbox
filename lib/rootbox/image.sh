@@ -68,6 +68,8 @@ image_setup() {
   tar xvf APKINDEX.tar.gz
   apktools_ver=`grep -C1 apk-tools-static APKINDEX | tail -1 | cut -d: -f2`
 
+  pdebug "apktools_ver='$apktools_ver'"
+
   file="apk-tools-static-${apktools_ver}.apk"
   download "$mirror/$version/main/x86_64/$file" "$file"
   tar xzf "$file"
@@ -109,6 +111,8 @@ image.add() {
     packages="alpine-base alpine-sdk"
     verstr="$version"
   fi
+
+  pdebug "@packages='$packages' verstr='$verstr'"
 
   local path="`image_path v$verstr`"
   local tpath="$path.tmp"

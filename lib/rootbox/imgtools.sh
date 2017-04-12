@@ -22,6 +22,9 @@ imgmount() {
   # Loop-mounts the given ext4 image to the target directory.
   image="$1"
   target="$2"
+
+  pdebug "@image,target: $*"
+
   mount -o loop -t ext4 "$image" "$target"
 }
 
@@ -56,6 +59,7 @@ with_mount() {
   local block="$2"
 
   local mpoint="`mktempd $MNT`"
+  pdebug "@img,block: $* [mpoint=$mpoint]"
   [ -d "$mpoint" ] && umount_if_mounted "$mpoint"
   mkdir -p "$mpoint"
 
@@ -84,12 +88,16 @@ with_bind() {
   local spec="$2"
   local block="$3"
 
+  pdebug "@root,spec,block: $*"
+
   local bind target
   read -r bind target <<< `split "$spec" '///'`
 
+  pdebug "bind='$bind' target='$target'"
   [ -n "$bind" ] && [ -n "$target" ] || die "Invalid bind mount spec '$spec'"
 
   local path="$root/$target"
+  pdebug "path='$path'"
 
   mkdir -p "$path"
   sudo mount --bind "$bind" "$path"
@@ -104,16 +112,19 @@ with_binds_impl() {
   "0") internal "with_binds given no arguments" ;;
   "1")
     local block="${rest[0]}"
+    pdebug "@1 arg: <block>"
     eval "$block" ;;
   "2")
     local spec="${rest[0]}"
     local block="${rest[1]}"
+    pdebug "@2 args: spec=$spec <block>"
     with_bind "$root" "$spec" "$block" ;;
   *)
     local first_spec="${rest[0]}"
     rest=("${rest[@]:1}")
     export rest
 
+    pdebug "@* args: first_spec=$first_spec ..."
     with_bind "$root" "$first_spec" with_binds_impl ;;
   esac
 }
@@ -156,6 +167,8 @@ in_chroot() {
   # using bind-file as the bind spec file as other-binds as a sequence of more
   # bind specs. Failure-message, if not empty, will be printing upon command
   # failure.
+
+  pdebug "@mpoint,user,command,failure,bind: $*"
 
   local mpoint="$1"
   local user="$2"

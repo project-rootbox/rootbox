@@ -29,11 +29,15 @@ with_location_git_hosted() {
   *) internal "Invalid Git kind $kind" ;;
   esac
 
+  pdebug "url='$url'"
+
   pnote "Downloading from $url..."
   download "$url" "$path" || die "Invalid Git location $kind:$loc"
 
   local path="$PWD/$path"
   export path
+
+  pdebug "path='$path'"
 
   cd "$origdir"
   eval "$wl_block"
@@ -57,6 +61,8 @@ with_location() {
   # If the location is a directory, then default will be appended as the default
   # file name.
 
+  pdebug "@loc,wl_block,default: $*"
+
   local loc="$1"
   local wl_block="$2"
   local default="$3"
@@ -79,6 +85,8 @@ with_location() {
   *) kind=file ;;
   esac
 
+  pdebug "kind='$kind' loc='$loc'"
+
   case "$kind" in
   git*)
     local repo
@@ -92,11 +100,15 @@ with_location() {
       path="$default"
     fi
 
+    pdebug "repo='$repo' path='$path'"
+
     if [[ "$repo" == *@@* ]]; then
       read -r repo branch <<< `split "$repo" "@@"`
     else
       branch=master
     fi
+
+    pdebug "branch='$branch'"
 
     export loc repo path branch wl_block origdir
     case "$kind" in
@@ -106,6 +118,8 @@ with_location() {
   url)
     [[ "$loc" == */ ]] && loc="$loc/$default" ||:
 
+    pdebug "loc='$loc'"
+
     export loc wl_block origdir
     in_tmp with_location_url ;;
   file)
@@ -113,6 +127,9 @@ with_location() {
     [ -e "$loc" ] || die "Invalid file location $loc"
 
     local path="`realpath "$loc"`"
+
+    pdebug "path='$path'"
+
     export path
     eval "$wl_block" ;;
   *) internal "invalid location kind $kind" ;;
