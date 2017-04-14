@@ -91,7 +91,7 @@ with_bind() {
   pdebug "@root,spec,block: $*"
 
   local bind target
-  read -r bind target <<< `split "$spec" '///'`
+  split "$spec" "///" bind target
 
   pdebug "bind='$bind' target='$target'"
   [ -n "$bind" ] && [ -n "$target" ] || die "Invalid bind mount spec '$spec'"

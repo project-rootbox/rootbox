@@ -94,7 +94,7 @@ with_location() {
     local branch
 
     if [[ "$loc" =~ /// ]]; then
-      read -r repo path <<< `split "$loc" "///"`
+      split "$loc" "///" repo path
     else
       repo="$loc"
       path="$default"
@@ -103,7 +103,7 @@ with_location() {
     pdebug "repo='$repo' path='$path'"
 
     if [[ "$repo" == *@@* ]]; then
-      read -r repo branch <<< `split "$repo" "@@"`
+      split "$repo" "@@" repo branch
     else
       branch=master
     fi

@@ -239,11 +239,16 @@ in_tmp() {
 
 
 split() {
-  # split str sep
-  # Splits the given string by sep, and prints the output to stdout.
+  # split str sep vars...
+  # Splits the given string by sep, and saves the result into the variables
+  # given.
+
   local str="$1"
   local sep="$2"
-  echo "$str" | awk "BEGIN { FS=\"$sep\"; } { print \$1\"\\n\"\$2; }"
+  shift 2
+
+  local script="BEGIN { FS=\"$sep\"; } "'{ print $1"\n"$2; }'
+  IFS=$'\n' read -r -d '' "$@" <<< "`echo "$str" | awk "$script"`" ||:
 }
 
 
