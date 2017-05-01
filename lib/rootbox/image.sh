@@ -32,31 +32,6 @@ EOF
 `
 
 
-SETUP_CODE=`cat <<EOF
-#!/bin/ash
-
-rc-update add devfs sysinit
-rc-update add dmesg sysinit
-rc-update add mdev sysinit
-
-rc-update add mount-ro shutdown
-rc-update add killprocs shutdown
-rc-update add savecache shutdown
-
-apk update
-
-adduser user -g user -G abuild -D
-echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
-
-if [ -d /_factory ]; then
-  cd /home/user
-  ls -1 /_factory/*.sh | sort -r | sudo -u user xargs -n1 /bin/ash
-fi
-
-EOF
-`
-
-
 image_setup() {
   # image_setup
   # Sets up the image version $version in the appropriate directory.
@@ -92,7 +67,6 @@ EOF
 
   echo "$RESOLV_CONF" > "$mpoint/etc/resolv.conf"
   echo "$REPOS" > "$mpoint/etc/apk/repositories"
-  echo "$SETUP_CODE" > "$mpoint/$SETUP"
 
   mv "$tpath" "$path"
 }

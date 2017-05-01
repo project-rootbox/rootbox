@@ -16,6 +16,31 @@ box_actual_setup() {
 }
 
 
+SETUP_CODE=`cat <<EOF
+#!/bin/ash
+
+rc-update add devfs sysinit
+rc-update add dmesg sysinit
+rc-update add mdev sysinit
+
+rc-update add mount-ro shutdown
+rc-update add killprocs shutdown
+rc-update add savecache shutdown
+
+apk update
+
+adduser user -g user -G abuild -D
+echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
+
+if [ -d /_factory ]; then
+  cd /home/user
+  ls -1 /_factory/*.sh | sort -r | sudo -u user xargs -n1 /bin/ash
+fi
+
+EOF
+`
+
+
 box_setup() {
   # box_setup
   # Sets up the box $tbox using the image factory location in $factory.
@@ -23,6 +48,14 @@ box_setup() {
   if [ -n "$factory" ]; then
     load_factory "$mpoint" "$factory" "$version"
   fi
+
+  [ -f "$mpoint/$SETUP" ] && \
+    pwarn "The image '$version' this box is based on was created before a \
+recent change in Rootbox and still contains old setup code. If you want to \
+remove the code, simply remove and recreate the image. (Note that this change
+does NOT impact any boxes that have already been created, but it does impact
+the creation process!)"
+  echo "$SETUP_CODE" > "$mpoint/$SETUP"
 
   safecall box_actual_setup \
     "rm -rf `proper_quote "$mpoint/_factory"` `proper_quote "$mpoint/$SETUP"`"

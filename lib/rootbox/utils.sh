@@ -25,10 +25,12 @@ _add_raw_color C_B 1  # Bold
 _add_raw_color CF_RED 31
 _add_raw_color CF_GREEN 32
 _add_raw_color CF_BLUE 34
+_add_raw_color CF_PURPLE 35
 _add_raw_color CF_CYAN 36
 _add_raw_color CF_R 39
 
 _add_color C_NOTE "$C_B$CF_CYAN"
+_add_color C_WARN "$C_B$CF_PURPLE"
 _add_color C_ERROR "$C_B$CF_RED"
 
 
@@ -60,6 +62,13 @@ pnote() {
   # pnote text...
   # Prints the given text, using the C_NOTE formatting.
   println "$C_NOTE$@" >&2
+}
+
+
+pwarn() {
+  # pwarn text...
+  # Prints the given text, using the C_WARN formatting.
+  println "$C_WARN$@" >&2
 }
 
 
