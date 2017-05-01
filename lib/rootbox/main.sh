@@ -38,8 +38,8 @@ integrity_check() {
 
 
 main() {
-  [ "$ROOTBOX_DEBUG" == "1" ] && enable_debug
   enable_errors
+  [ "$ROOTBOX_DEBUG" == "1" ] && enable_debug ||:
 
   integrity_check
 

@@ -125,6 +125,9 @@ init_argparser() {
 generic_command_setup() {
   add_bool_flag "D" "debug" "Print each shell command as it's executed."
   add_bool_flag "L" "license" "Show the license."
+  add_value_flag "C" "colors" "Set whether or not Rootbox should print \
+colored text. (Valid values: always, auto, never)" "auto" \
+  "choices=always|auto|never"
 
   disable_errors
   argparser_parse "$@"
@@ -132,6 +135,7 @@ generic_command_setup() {
 
   [ "$debug" == "true" ] && enable_debug ||:
   [ "$license" == "true" ] && show_licenses ||:
+  update_colors "$colors" 1
 }
 
 

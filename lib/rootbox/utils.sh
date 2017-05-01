@@ -11,21 +11,25 @@ SETUP=setup.sh
 
 # COLORS, PRINTING, ERRORS, DEBUGGING
 
-
 _add_color() {
-  eval "$1=\\\\033[$2m"
+  eval "$1='$2'"
+  eval "_ALL_COLORS+=' $1'"
 }
 
-_add_color C_R 0  # Reset
-_add_color C_B 1  # Bold
-_add_color CF_RED 31
-_add_color CF_GREEN 32
-_add_color CF_BLUE 34
-_add_color CF_CYAN 36
-_add_color CF_R 39
+_add_raw_color() {
+  _add_color $1 "\\033[$2m"
+}
 
-C_NOTE="$C_B$CF_CYAN"
-C_ERROR="$C_B$CF_RED"
+_add_raw_color C_R 0  # Reset
+_add_raw_color C_B 1  # Bold
+_add_raw_color CF_RED 31
+_add_raw_color CF_GREEN 32
+_add_raw_color CF_BLUE 34
+_add_raw_color CF_CYAN 36
+_add_raw_color CF_R 39
+
+_add_color C_NOTE "$C_B$CF_CYAN"
+_add_color C_ERROR "$C_B$CF_RED"
 
 
 print() {
@@ -130,6 +134,27 @@ enable_errors() {
 disable_errors() {
   # Disables verbose error handles (to allow a silent exit).
   trap - ERR
+}
+
+
+update_colors() {
+  # update_colors [value=always|auto|never]
+  # Updates the current color settings to the given value.
+
+  local value="$1"
+
+  case "$value" in
+  always) ;;
+  auto) [ -t 1 ] || disable_colors ;;
+  never) disable_colors ;;
+  *) internal "Invalid color value '$value'" ;;
+  esac
+}
+
+
+disable_colors() {
+  # Disables any colors from being printed.
+  unset $_ALL_COLORS
 }
 
 
