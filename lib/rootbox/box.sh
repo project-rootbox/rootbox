@@ -282,6 +282,43 @@ box.list::ARGS() {
 }
 
 
+box.update.binds() {
+  require_init
+
+  local box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$name' does not exist"
+
+  [ -z "${!bind[@]}" ] && die "Need at least one bind to modify!"
+
+  for spec in "${bind[@]}"; do
+    if [[ "$spec" == ^* ]]; then
+      spec=${spec#*^}
+      if ! grep -q "$spec" "$box/binds"; then
+        pwarn "Bind spec $spec was not present in the list of bind mounts; it \
+will not be removed."
+      else
+        sed -i "/^$spec\$/d" "$box/binds"
+      fi
+    else
+      echo "$spec" >> "$box/binds"
+    fi
+  done
+}
+
+
+box.update.binds::DESCR() {
+  echo "updates the binds for the given box. (Use 'rootbox box.info' to see a \
+list of the current binds.)"
+}
+
+
+box.update.binds::ARGS() {
+  add_positional "name" "The name of the box to update"
+  add_positional "bind" "A new bind mount to add. If it's prefixed with a caret
+(^), then it will be removed instead. Can be passed multiple times." nargs=*
+}
+
+
 run_factory_all() {
   in_chroot "$mpoint" user "/bin/ash /_factory/_all.sh" \
             "Failed to run factory scripts" "$box/binds"
@@ -299,6 +336,7 @@ update_box_with_factory() {
 
 box.update.factory() {
   require_init
+  require_root
 
   local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
@@ -332,7 +370,6 @@ box.update.factory::ARGS() {
 
 box.update.version-override() {
   require_init
-  require_root
 
   local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
@@ -443,6 +480,7 @@ register_command box.clone
 register_command box.dist
 register_command box.import
 register_command box.list
+register_command box.update.binds
 register_command box.update.factory
 register_command box.update.version-override
 register_command box.run
