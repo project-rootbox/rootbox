@@ -32,11 +32,7 @@ apk update
 adduser user -g user -G abuild -D
 echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
 
-if [ -d /_factory ]; then
-  cd /home/user
-  ls -1 /_factory/*.sh | sort -r | sudo -u user xargs -n1 /bin/ash
-fi
-
+[ -d /_factory ] && sudo -u user /bin/ash /_factory/_all.sh
 EOF
 `
 
@@ -45,9 +41,7 @@ box_setup() {
   # box_setup
   # Sets up the box $tbox using the image factory location in $factory.
 
-  if [ -n "$factory" ]; then
-    load_factory "$mpoint" "$factory" "$version"
-  fi
+  [ -n "$factory" ] && setup_factories "$mpoint" "$factory" "$version"
 
   [ -f "$mpoint/$SETUP" ] && \
     pwarn "The image '$version' this box is based on was created before a \

@@ -53,6 +53,25 @@ load_factory() {
   export loc mpoint version
 
   pnote "Loading factory $loc..."
-  mkdir -p "$mpoint/_factory"
   with_location "$loc" get_factory "factory.sh"
+}
+
+
+FACTORY_ALL_CODE=`cat <<EOF
+cd /home/user
+ls -1 /_factory/?.sh | sort -r | xargs -n1 /bin/ash
+EOF
+`
+
+setup_factories() {
+  # setup_factories mpoint loc version
+  # Sets up all the factories from loc inside $mpoint/_factory.
+
+  local mpoint="$1"
+  local loc="$2"
+  local version="$3"
+
+  mkdir -p "$mpoint/_factory"
+  echo "$FACTORY_ALL_CODE" > "$mpoint/_factory/_all.sh"
+  load_factory "$mpoint" "$loc" "$version"
 }
