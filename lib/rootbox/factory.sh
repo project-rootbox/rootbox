@@ -3,7 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+DOWNLOADED_HASHES=()
+
+
 get_factory() {
+  local sha="`sha1sum "$path" | tr ' ' '\t' | cut -f1`"
+  pdebug "@path=$path,sha=$sha,DOWNLOADED_HASHES=${DOWNLOADED_HASHES[@]}"
+  if [[ " ${DOWNLOADED_HASHES[@]} " =~ " $sha " ]]; then
+    pnote "NOTE: skipping because this factory has already been downloaded..."
+    return 0
+  fi
+
+  DOWNLOADED_HASHES+=("$sha")
+
   local tgt="$mpoint/_factory/`ls -1 "$mpoint/_factory" | wc -l`.sh"
   pdebug "@tgt='$tgt'"
 
@@ -31,7 +43,8 @@ load_factory() {
   # Loads the factory at loc, as well as its dependencies into the given
   # mountpoint (storing as /_factory/0.sh, /_factory/1.sh, etc., in reverse
   # order of dependencies). Also verify that the factory is compatible with the
-  # given image version.
+  # given image version. If the factory's hash is already in DOWNLOADED_HASHES,
+  # then it will not be re-downloaded.
 
   local mpoint="$1"
   local loc="$2"

@@ -31,6 +31,7 @@ integrity_check() {
   check_exe df
   check_exe tr
   check_exe grep
+  check_exe sha1sum
 
   (( ${BASH_VERSINFO[0]} >= 4 )) || die "bash >= 4.3 is requried"
   (( ${BASH_VERSINFO[1]} >= 3 )) || die "bash >= 4.3 is requried"
