@@ -121,6 +121,44 @@ mounted whenever the box is run. Can be passed multiple times." nargs=*
 }
 
 
+box.info() {
+  require_init
+
+  local box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$name' does not exist"
+
+  declare -A info
+  info[Name]="$name"
+  info[Location]="`realpath "$box"`/"
+
+  if [ -f "$box/version" ]; then
+    info[Image]="`<"$box/version"`"
+  else
+    info[Image]="<unknown>"
+  fi
+
+  info[Size]="`du -h "$box" | cut -f1`"
+  info[Binds]="`sed '/^$/d' <"$box/binds" | tr '\n' ' '`"
+  [ -n "${info[Binds]}" ] || info[Binds]="<none>"
+
+  keys=(Name Location Image Size Binds)
+
+  for key in "${keys[@]}"; do
+    printfln "${C_NOTE}%-10s$C_R $C_B%s" "$key:" "${info[$key]}"
+  done
+}
+
+
+box.info::DESCR() {
+  echo "prints information about the given box."
+}
+
+
+box.info::ARGS() {
+  add_positional "name" "The name of the box for which to find info"
+}
+
+
 box.clone() {
   require_init
 
@@ -261,7 +299,6 @@ update_box_with_factory() {
 
 box.update.factory() {
   require_init
-  require_root
 
   local box="`box_path "$name"`"
   [ -d "$box" ] || die "Box '$name' does not exist"
@@ -401,6 +438,7 @@ box.remove::ARGS() {
 
 
 register_command box.new
+register_command box.info
 register_command box.clone
 register_command box.dist
 register_command box.import
