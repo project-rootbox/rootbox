@@ -386,10 +386,7 @@ box.update.version-override() {
 
 
 box.update.version-override::DESCR() {
-  echo "forcibly overrides the given box's version. Note that this command is \
-somewhat dangerous if not used correctly! Version overrides are not checked,
-so it is possible to override the version to one that does not exist, causing
-some factories to be unable to run."
+  echo "forcibly overrides the given box's version."
 }
 
 

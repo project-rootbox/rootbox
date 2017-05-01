@@ -25,7 +25,7 @@ collect_command_info() {
   # Prints information about all the registered commands.
 
   for cmd in "${COMMANDS[@]}"; do
-    printf '    %-15s - ' $cmd
+    printf '    %-28s - ' $cmd
     eval ${cmd}::DESCR
   done
 }
