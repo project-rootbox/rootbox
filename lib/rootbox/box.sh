@@ -89,6 +89,7 @@ box.new() {
   cp --sparse=always "$image" "$tbox/image"
 
   pnote "Setting up box..."
+  echo "$version" > "$box/version"
   with_mount "$tbox/image" box_setup
 
   pnote "Saving box..."
@@ -243,6 +244,87 @@ box.list::ARGS() {
 }
 
 
+run_factory_all() {
+  in_chroot "$mpoint" user "/bin/ash /_factory/_all.sh" \
+            "Failed to run factory scripts" "$box/binds"
+}
+
+
+update_box_with_factory() {
+  # update_box_with_factory
+  # Loads the factory at $factory into the mounted image.
+
+  setup_factories "$mpoint" "$factory" "$version"
+  safecall run_factory_all "rm -rf `proper_quote "$mpoint/_factory"`"
+}
+
+
+box.update.factory() {
+  require_init
+  require_root
+
+  local box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$name' does not exist"
+
+  if [ ! -f "$box/version" ]; then
+    pwarn "This box was created before a small change in the box format that \
+remembers the image version used. For now, the image version will be assumed \
+to be 3.5. If you want to set the version permanently, then just run \
+'rootbox box.update.version-override <version used>'"
+    version=3.5
+  else
+    version="`<"$box/version"`"
+  fi
+
+  export factory version
+
+  with_mount "$box/image" update_box_with_factory "$version"
+}
+
+
+box.update.factory::DESCR() {
+  echo "updates the given box by running the given factory on it."
+}
+
+
+box.update.factory::ARGS() {
+  add_positional "name" "The name of the box to update"
+  add_positional "factory" "The factory to use"
+}
+
+
+box.update.version-override() {
+  require_init
+  require_root
+
+  local box="`box_path "$name"`"
+  [ -d "$box" ] || die "Box '$name' does not exist"
+
+  if [ -f "$box/version" ]; then
+    orig="`<"$box/version"`"
+  else
+    orig="<unknown>"
+  fi
+
+  echo "$version" > "$box/version"
+  pnote "Version forcibly changed from $orig to $version."
+}
+
+
+box.update.version-override::DESCR() {
+  echo "forcibly overrides the given box's version. Note that this command is \
+somewhat dangerous if not used correctly! Version overrides are not checked,
+so it is possible to override the version to one that does not exist, causing
+some factories to be unable to run."
+}
+
+
+box.update.version-override::ARGS() {
+  add_positional "name" "The name of the box to update"
+  add_positional "version" "The new version to use"
+}
+
+
 box_run_command() {
   # box_run_command
   # Runs $command inside the mounted box $mpoint, with the proper bind mounts.
@@ -323,5 +405,7 @@ register_command box.clone
 register_command box.dist
 register_command box.import
 register_command box.list
+register_command box.update.factory
+register_command box.update.version-override
 register_command box.run
 register_command box.remove
