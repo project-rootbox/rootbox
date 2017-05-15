@@ -13,6 +13,9 @@ check_exe() {
 
 
 integrity_check() {
+  (( ${BASH_VERSINFO[0]} >= 4 )) || die "bash >= 4.3 is requried"
+  (( ${BASH_VERSINFO[1]} >= 3 )) || die "bash >= 4.3 is requried"
+
   check_exe curl
   check_exe cp
   check_exe less
@@ -33,12 +36,27 @@ integrity_check() {
   check_exe grep
   check_exe sha1sum
 
-  (( ${BASH_VERSINFO[0]} >= 4 )) || die "bash >= 4.3 is requried"
-  (( ${BASH_VERSINFO[1]} >= 3 )) || die "bash >= 4.3 is requried"
+  if [ "$ROOTBOX_DISABLE_NS" != "1" ]; then
+    check_exe unshare
+    check_exe zgrep
+
+    zgrep -q CONFIG_USER_NS=y /boot/config-`uname -r` || \
+      die "Rootbox requires a kernel configured with CONFIG_USER_NS support in \
+order to use namespaces. If you can't re-configure your kernel, you can also \
+set ROOTBOX_DISABLE_NS=1 in order to disable namespaces, but then you'll need \
+root access to run some of the Rootbox commands."
+
+    unshare --help | grep -q map-root-user || \
+      die "The version of unshare you are currently using is too old. Try \
+upgrading your version of util-linux to version 2.25 or newer. You can also set \
+ROOTBOX_DISABLE_NS=1 in order to disable namespaces, but then you'll need root \
+access to run some of the Rootbox commands."
+  fi
 }
 
 
 main() {
+  COMMAND_LINE=("${@}")
   enable_errors
   [ "$ROOTBOX_DEBUG" == "1" ] && enable_debug ||:
 

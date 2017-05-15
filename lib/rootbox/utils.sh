@@ -337,8 +337,22 @@ require_init() {
 
 require_root() {
   # require_root
-  # If the executor is not root, then aborts with an error message.
-  [ "$EUID" -eq 0 ] || die ${1:-"This must be run as root!"}
+  # If the command is not being run as root, then re-run Rootbox, using the
+  # unshare command to run it inside a new namespace.
+  # If ROOTBOX_DISABLE_NS is set, then give an error when root access is not
+  # available.
+
+  if [ "$EUID" -ne 0 ]; then
+    if [ "$ROOTBOX_DISABLE_NS" == 1 ]; then
+      die "Because ROOTBOX_DISABLE_NS is set, this command must be run as root"
+    else
+      local ret=0
+      unshare -mr "`readlink /proc/$$/exe`" "$0" "${COMMAND_LINE[@]}" || ret=1
+      disable_errors
+      exit "$ret"
+    fi
+  fi
+
 }
 
 

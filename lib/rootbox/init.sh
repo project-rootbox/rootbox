@@ -25,7 +25,7 @@ remove_old_directory() {
   # Deletes the old workspace directory.
 
   [ "$force" == "false" ] && die "Workspace directory already exists"
-  require_root "Root access is required to remove the old workspace directory."
+  require_root
 
   if [ -L "$WORKSPACE" ]; then
     to_remove=`realpath "$WORKSPACE"`
