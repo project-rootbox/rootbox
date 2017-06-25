@@ -89,7 +89,7 @@ box.new() {
   cp --sparse=always "$image" "$tbox/image"
 
   pnote "Setting up box..."
-  echo "$version" > "$box/version"
+  echo "$version" > "$tbox/version"
   with_mount "$tbox/image" box_setup
 
   pnote "Saving box..."
