@@ -111,7 +111,7 @@ image.add::ARGS() {
   add_positional "version" "The Alpine Linux version to use"
   add_value_flag "m" "mirror" "The Alpine Linux mirror to use" "$DEFAULT_MIRROR"
   add_bool_flag "s" "slim" "Don't install the development packages. The \
-resulting image can later be referenced via version-nodev; e.g., 3.5-nodev."
+resulting image can later be referenced via version-nodev; e.g., 3.6-nodev."
 }
 
 

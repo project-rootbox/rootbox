@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-ALL_VERS="3.4 3.5"
-DEFAULT_VER="3.5"
+ALL_VERS="3.4 3.5 3.6"
+DEFAULT_VER="3.6"
 
 SETUP=setup.sh
 
