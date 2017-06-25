@@ -32,7 +32,7 @@ apk update
 adduser user -g user -G abuild -D
 echo "user ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo) >/dev/null
 
-[ -d /_factory ] && sudo -u user /bin/ash /_factory/_all.sh
+[ -d /_factory ] && sudo -u user /bin/ash /_factory/_all.sh ||:
 EOF
 `
 
