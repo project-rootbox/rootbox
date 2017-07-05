@@ -471,6 +471,73 @@ box.remove::ARGS() {
 }
 
 
+box_push() {
+  dest="$mpoint/$dest"
+  mkdir -p "`dirname "$dest"`"
+  cp -r "$file" "$dest"
+}
+
+
+box.push() {
+  require_init
+  require_root
+
+  [ -f "$file" ] || die "File '$file' does not exist"
+  local box="`box_path "$box"`"
+  [ -d "$box" ] || die "Box '$box' does not exist"
+  [[ "$dest" = /* ]] || die "Destination path '$dest' should be absolute"
+
+  export file dest
+  with_mount "$box/image" box_push
+}
+
+
+box.push::DESCR() {
+  echo "sends the given file to the given box."
+}
+
+
+box.push::ARGS() {
+  add_positional "box" "The box to send the file into"
+  add_positional "file" "The file to send into the box"
+  add_positional "dest" "The destination path within the box"
+}
+
+
+box_pull() {
+  file="$mpoint/$file"
+  [ -f "$file" ] || die "Source path '$file' does not exist inside mount point"
+  mkdir -p "`dirname "$dest"`"
+  cp -r "$file" "$dest"
+}
+
+
+box.pull() {
+  require_init
+  require_root
+
+  # [ -f "$file" ] || die "File '$file' does not exist"
+  local box="`box_path "$box"`"
+  [ -d "$box" ] || die "Box '$box' does not exist"
+  [[ "$file" = /* ]] || die "Source path '$file' should be absolute"
+
+  export file dest
+  with_mount "$box/image" box_pull
+}
+
+
+box.pull::DESCR() {
+  echo "retrieves the given file from inside the box"
+}
+
+
+box.pull::ARGS() {
+  add_positional "box" "The box from which to get the file"
+  add_positional "file" "The file to retrieve from the box"
+  add_positional "dest" "The destination path"
+}
+
+
 register_command box.new
 register_command box.info
 register_command box.clone
@@ -482,3 +549,5 @@ register_command box.update.factory
 register_command box.update.version-override
 register_command box.run
 register_command box.remove
+register_command box.push
+register_command box.pull
