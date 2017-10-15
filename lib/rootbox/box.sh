@@ -455,6 +455,7 @@ box.remove() {
 
   rm -f "$box/binds"
   rm -f "$box/image"
+  rm -f "$box/version"
   rmdir "$box"
 
   pnote "Successfully removed box '$name'."
