@@ -4,7 +4,7 @@
 
 
 ALL_VERS="3.4 3.5 3.6 3.7"
-DEFAULT_VER="3.6 3.7"
+DEFAULT_VER="3.7"
 
 SETUP=setup.sh
 
