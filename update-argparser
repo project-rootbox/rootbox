@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cd "`dirname $0`"
+. lib/rootbox/utils.sh
+
+mkdir -p lib/rootbox/argparser
+cd lib/rootbox/argparser
+
+ROOT=https://raw.githubusercontent.com/kirbyfan64/bash-argparser/fix_dot
+
+download $ROOT/argparser
+download $ROOT/LICENSE.md LICENSE
+# Grabbed from the argparser file itself
+sed -i 's/2016/2016 Ekeyme Mo <ekeyme@gmail.com>/' LICENSE
